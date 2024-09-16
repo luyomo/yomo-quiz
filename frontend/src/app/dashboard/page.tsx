@@ -2,7 +2,8 @@
 
 import type { ProColumns } from '@ant-design/pro-components';
 
-import {
+import Icon, {
+  PlayCircleOutlined,
   CrownOutlined,
   InfoCircleOutlined,
   MergeCellsOutlined,
@@ -11,6 +12,7 @@ import {
   UserOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
+
 import { 
   PageContainer, 
   ProCard, 
@@ -22,49 +24,16 @@ import {
   StepsForm, } from '@ant-design/pro-components';
 import { Button, Form, message  } from 'antd';
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { TiDBCloudOnAzure       } from './azure.tsx';
-import { TiDBCloudOnAws         } from './aws.tsx';
-import { TiDBCloudOnGcp         } from './gcp.tsx';
 import { useCookies             } from 'react-cookie';
-import TiDBClusterStepForm4AZ     from './frontend/az/TiDBClusterStepForm4AZ.tsx';
-import TiDBClusterStepForm4GCP    from './frontend/gcp/TiDBClusterStepForm4GCP.tsx';
-
-import '../../backend/wasm_exec.js';
-import '../../backend/wasmTypes.d.ts';
-
-
-// This is the source to use wasm from golang. It is just one example for future usage
-
-// function wasmFibonacciSum(n: number) {
-//   return new Promise<number>((resolve) => {
-//     // Call the wasmFibonacciSum function from Go
-//     const res = window.wasmFibonacciSum(n);  
-//     resolve(res);
-//   });
-// }
+import EikenIcon from '../../../icons/EikenIcon.tsx';
 
 export default () => {
   const [pathname    , setPathname]  = useState('/product/tidb-clusters-on-gcp');
   const [mounted     , setMounted]   = useState(false);
-//  const [theLocation , setLocation]  = useState("/product/tidb-clusters-on-gcp");
   const [cloudType   , setCloudType] = useState("az");
   const [cookies     , setCookie]    = useCookies(['AUTH_ACCESS_TOKEN'])
   const [form] = Form.useForm<{ name: string; company: string }>();
   const [isWasmLoaded, setIsWasmLoaded] = useState(false);
-//   const worker = new Worker(new URL("../../webworker/tidb-cluster.js", import.meta.url))
-//   const workers = new WebWorker(worker);
-//  workers.postMessage("Hello web worker");
-//   const port = new SharedWorker(new URL("../../webworker/tidb-cluster.js", import.meta.url), {
-//      type: 'module',
-//      name: 'Worker Name',
-//    })
-//   port.onmessage = function(e){
-//     console.log(e.data);
-//   };
-//   port.start();
-//   port.postMessage("Hello Shared Worker. I'm Mr. Tab");
-
-//   useEffect(() => { setMounted(true) }, [])
 
   
   useEffect(() => { 
@@ -108,15 +77,6 @@ export default () => {
     const expires_in      = queryParameters.get("expires_in");
     const state           = queryParameters.get("state");
 
-    const port = new SharedWorker(new URL("../../webworker/tidb-cluster.js", import.meta.url), {
-      type: 'module',
-      name: 'Worker Name',
-    }).port;
-    port.onmessage = function(e){
-      console.log("Received message from worker:", e.data);
-    };
-    port.start();
-    port.postMessage({type: "init"});
 
     sessionStorage.setItem('AUTH_ACCESS_TOKEN', access_token);
     console.log(`gcp access token: ${access_token},  token_type: ${token_type},  expires_in: ${expires_in}, state: ${state}`);
@@ -197,24 +157,13 @@ export default () => {
     console.log("Calling in the MainPage");
     console.log(props);
     console.log(`The location: ${location}`);
-    if (location == "/product/tidb-clusters-on-gcp") {
-      return <TiDBCloudOnGcp />;
-    } else if (location == "/product/tidb-clusters-on-aws") {
-      return <TiDBCloudOnAws />;
-    } else if (location == "/product/tidb-clusters-on-az") {
-      return <TiDBCloudOnAzure />;
-    } else if (location == "/product/az/new") {
-      return <TiDBClusterStepForm4AZ />;
-    } else if (location == "/product/gcp/new") {
-      return <TiDBClusterStepForm4GCP />;
-    }
   }
 
   return mounted && (
     <div id="test-pro-layout" style={{ height: '100vh' }} >
       <ProLayout
-        title="TiDB Cloud on Azure"
-        logo="https://i0.wp.com/softwareengineeringdaily.com/wp-content/uploads/2019/01/tidb.jpg?resize=730%2C389&ssl=1"
+        title="Eiken"
+        logo="/example/en-icon.jpg"
         fixSiderbar
         onPageChange={ switchPageContent }
         route={{
@@ -236,34 +185,65 @@ export default () => {
               ],
             },
             {
-              name: 'Product',
-              icon: <TabletOutlined />,
-              path: '/product',
+              name: 'Eiken',
+              icon: <EikenIcon style={{ fontSize: '32px' }} />,
+              path: '/eiken',
               component: './ListTableList',
               routes: [
                 {
-                  path: '/product/tidb-clusters-on-az',
-                  name: 'TiDB Clusters on Azure',
+                  path: '/eiken/audio-en-word-2-write',
+                  name: 'Write English From Audio',
                   icon: <CrownOutlined />,
                   component: './Welcome02',
                 },
                 {
-                  path: '/product/tidb-clusters-on-gcp',
-                  name: 'TiDB Clusters on GCP',
+                  path: '/eiken/jp-word-2-english',
+                  name: 'Write English From JP',
                   icon: <CrownOutlined />,
                   component: './Welcome03',
                 },
                 {
-                  path: '/product/tidb-clusters-on-aws',
-                  name: 'TiDB Clusters on AWS',
+                  path: '/eiken/audio-en-sentence-2-write',
+                  name: 'Write English Sentence From Audio',
                   icon: <CrownOutlined />,
                   component: './Welcome04',
                 },
                 {
-                  path: '/product/kafka',
-                  name: 'KAFKA',
+                  path: '/eiken/jp-sentence-2-english',
+                  name: 'Write English Sentence from JP',
                   icon: <CrownOutlined />,
                   component: './Welcome05',
+                },
+                {
+                  path: '/eiken',
+                  name: 'Eiken',
+                  icon: <CrownOutlined />,
+                  children: [
+                    {
+                      path: '/eiken/audio-en-word-2-write',
+                      name: 'Write English From Audio',
+                      icon: <CrownOutlined />,
+                      component: './Welcome02',
+                    },
+                    {
+                      path: '/eiken/jp-word-2-english',
+                      name: 'Write English From JP',
+                      icon: <CrownOutlined />,
+                      component: './Welcome03',
+                    },
+                    {
+                      path: '/eiken/audio-en-sentence-2-write',
+                      name: 'Write English Sentence From Audio',
+                      icon: <CrownOutlined />,
+                      component: './Welcome04',
+                    },
+                    {
+                      path: '/eiken/jp-sentence-2-english',
+                      name: 'Write English Sentence from JP',
+                      icon: <CrownOutlined />,
+                      component: './Welcome05',
+                    },
+                  ],
                 },
               ],
             },
