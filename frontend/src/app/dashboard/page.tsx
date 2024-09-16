@@ -58,12 +58,11 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
 export default () => {
   const [pathname    , setPathname]  = useState('/product/tidb-clusters-on-gcp');
   const [mounted     , setMounted]   = useState(false);
-  const [cloudType   , setCloudType] = useState("az");
+  const [pageRoute   , setPageRoute] = useState("/grade-selection");
   const [cookies     , setCookie]    = useCookies(['AUTH_ACCESS_TOKEN'])
   const [form] = Form.useForm<{ name: string; company: string }>();
   const { styles } = useStyle();
 
-  
   useEffect(() => { 
     setMounted(true);
 
@@ -97,17 +96,44 @@ export default () => {
     fetch("/tidbonak/api/v1/tidbclustercreate").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
    }, [])
 
+  const EikenQuesType = () => {
+    if(pageRoute === "/grade-selection") {
+      return <EikenGrade />
+    }else if(pageRoute === "/example/eiken/audio-en-word-2-write") {
+      return <EikenCategory />
+    }else {
+      return <EikenGrade />
+    }
+  }
+
+  // const EikenQuesType = () => {console.log("Calling the Eiken Question Type")};
+  const EikenGrade = () => (
+    <Flex vertical gap="large" style={{ width: '100%' }}>
+      <ConfigProvider button={{ className: styles.linearGradientButton }} >
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => alert("Write English From Audio")} >一  級</Button>
+          <Button size="large" onClick={() => alert(`Write English From JP`)} >準一級</Button>
+          <Button size="large" onClick={() => alert(`Write English Sentence From Audio`)} >二  級</Button>
+          <Button size="large" onClick={() => alert(`Write English Sentence from JP`)} >準二級</Button>
+          <Button size="large" onClick={() => alert(`Write English Sentence from JP`)} >三  級</Button>
+      </ConfigProvider>
+    </Flex>)
+
+  const EikenCategory = () => (
+    <Flex vertical gap="large" style={{ width: '100%' }}>
+      <ConfigProvider button={{ className: styles.linearGradientButton }} >
+          <Button type="primary" size="large" icon={<AntDesignOutlined />} onClick={() => alert("Write English From Audio")} >Write English From Audio</Button>
+          <Button size="large" onClick={() => alert(`Write English From JP`)} >Write English From JP</Button>
+          <Button size="large" onClick={() => alert(`Write English Sentence From Audio`)} >Write English Sentence From Audio</Button>
+          <Button size="large" nClick={() => alert(`Write English Sentence from JP`)} >Write English Sentence from JP</Button>
+      </ConfigProvider>
+    </Flex>
+  )
+
   const switchPageContent = (args) => {
     console.log("Switching page between different panels");
     console.log(args);
+    setPageRoute(args.pathname);
     setPathname(args.pathname);
-  }
-
-  function MainPage(props) {
-    const location = props.location;
-    console.log("Calling in the MainPage");
-    console.log(props);
-    console.log(`The location: ${location}`);
   }
 
   return mounted && (
@@ -124,31 +150,26 @@ export default () => {
               name: 'Eiken',
               icon: <EikenIcon style={{ fontSize: '32px' }} />,
               path: '/eiken',
-              component: './ListTableList',
               routes: [
                 {
-                  path: '/eiken/audio-en-word-2-write',
+                  path: '/example/eiken/audio-en-word-2-write',
                   name: 'Write English From Audio',
                   icon: <CrownOutlined />,
-                  component: './Welcome02',
                 },
                 {
                   path: '/eiken/jp-word-2-english',
                   name: 'Write English From JP',
                   icon: <CrownOutlined />,
-                  component: './Welcome03',
                 },
                 {
                   path: '/eiken/audio-en-sentence-2-write',
                   name: 'Write English Sentence From Audio',
                   icon: <CrownOutlined />,
-                  component: './Welcome04',
                 },
                 {
                   path: '/eiken/jp-sentence-2-english',
                   name: 'Write English Sentence from JP',
                   icon: <CrownOutlined />,
-                  component: './Welcome05',
                 },
               ],
             },
@@ -175,20 +196,7 @@ export default () => {
           <a onClick={() => { setPathname(item.path || pathname ); }} > {dom} </a>
         )}
       >
-        <PageContainer>
-          <ProCard style={{ height: '50vh', minHeight: 10 }} >
-            <Flex vertical gap="large" style={{ width: '100%' }}>
-              <ConfigProvider button={{ className: styles.linearGradientButton }} >
-                  <Button type="primary" size="large" icon={<AntDesignOutlined />} onClick={() => alert("Write English From Audio")} >Write English From Audio</Button>
-                  <Button size="large" onClick={() => alert(`Write English From JP`)} >Write English From JP</Button>
-                  <Button size="large" onClick={() => alert(`Write English Sentence From Audio`)} >Write English Sentence From Audio</Button>
-                  <Button size="large" nClick={() => alert(`Write English Sentence from JP`)} >Write English Sentence from JP</Button>
-              </ConfigProvider>
-            </Flex>
-          </ProCard>
-          <ProCard style={{ height: '120vh', minHeight: 600 }} >
-            <MainPage location={pathname} />
-          </ProCard>
+        <PageContainer content={ <EikenQuesType /> } >
         </PageContainer>
       </ProLayout>
     </div>
