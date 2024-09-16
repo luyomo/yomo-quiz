@@ -70,6 +70,8 @@ const Page = () => {
     console.log("exp:", jsonPayload.exp);
     console.log("jti:", jsonPayload.jti);
 
+    location.href="/example/dashboard"
+
   };
 
   const handleError = () => {
@@ -137,14 +139,8 @@ const Page = () => {
   }
 
   const items: TabsProps['items'] = [
-    {
-      key: 'azure',
-      label: 'Azure',
-    },
-    {
-      key: 'gcp',
-      label: 'GCP',
-    }
+    { key: 'azure', label: 'Azure' },
+    { key: 'gcp'  , label: 'GCP'   }
   ];
 
   return (
@@ -159,7 +155,7 @@ const Page = () => {
         onFinish={ onLogin }
         actions={
           <GoogleOAuthProvider clientId={ process.env.GAPI_CLIENT_ID} >
-            <GoogleLogin onSuccess={handleSuccess} onError={handleError} />
+            <GoogleLogin onSuccess={handleSuccess} onError={handleError} useOneTap={true} />
           </GoogleOAuthProvider>
         }
       >

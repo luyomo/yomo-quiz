@@ -11,6 +11,7 @@ import Icon, {
   TabletOutlined,
   UserOutlined,
   PlusOutlined,
+  AntDesignOutlined,
 } from '@ant-design/icons';
 
 import { 
@@ -22,10 +23,37 @@ import {
   ProFormText,
   ProFormDigit,
   StepsForm, } from '@ant-design/pro-components';
-import { Button, Form, message  } from 'antd';
+import { Button, ConfigProvider, Form, message, Flex } from 'antd';
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useCookies             } from 'react-cookie';
 import EikenIcon from '../../../icons/EikenIcon.tsx';
+import { createStyles } from 'antd-style';
+
+const useStyle = createStyles(({ prefixCls, css }) => ({
+  linearGradientButton: css`
+    &.${prefixCls}-btn-primary:not([disabled]):not(.${prefixCls}-btn-dangerous) {
+      border-width: 0;
+
+      > span {
+        position: relative;
+      }
+
+      &::before {
+        content: '';
+        background: linear-gradient(135deg, #6253e1, #04befe);
+        position: absolute;
+        inset: 0;
+        opacity: 1;
+        transition: all 0.3s;
+        border-radius: inherit;
+      }
+
+      &:hover::before {
+        opacity: 0;
+      }
+    }
+  `,
+}));
 
 export default () => {
   const [pathname    , setPathname]  = useState('/product/tidb-clusters-on-gcp');
@@ -33,7 +61,7 @@ export default () => {
   const [cloudType   , setCloudType] = useState("az");
   const [cookies     , setCookie]    = useCookies(['AUTH_ACCESS_TOKEN'])
   const [form] = Form.useForm<{ name: string; company: string }>();
-  const [isWasmLoaded, setIsWasmLoaded] = useState(false);
+  const { styles } = useStyle();
 
   
   useEffect(() => { 
@@ -66,89 +94,12 @@ export default () => {
       console.log("The service worker is not defined in the navigator");
     }
 
-    // The service worker only catches those requestes from allowed scope. It's not the destination. 
     fetch("/tidbonak/api/v1/tidbclustercreate").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
    }, [])
-
-  useLayoutEffect(() => {
-    const queryParameters = new URLSearchParams(window.location.hash.substring(1) )
-    const access_token    = queryParameters.get("access_token");
-    const token_type      = queryParameters.get("token_type");
-    const expires_in      = queryParameters.get("expires_in");
-    const state           = queryParameters.get("state");
-
-
-    sessionStorage.setItem('AUTH_ACCESS_TOKEN', access_token);
-    console.log(`gcp access token: ${access_token},  token_type: ${token_type},  expires_in: ${expires_in}, state: ${state}`);
-    console.log("Calling the region change or subscription change ");
-
-    if ( access_token ) {
-      setCookie('AUTH_ACCESS_TOKEN', access_token, { path: '/'});
-      setCookie('TiDB_CLOUD_TYPE', state.split(':')[0], { path: '/'});
-    }
-
-    console.log("The TiDB cloud type: " + cookies.TiDB_CLOUD_TYPE);
-    if (cookies.TiDB_CLOUD_TYPE === "az cloud") {
-      // setLocation("/product/tidb-clusters-on-az");
-      setPathname("/product/tidb-clusters-on-az");
-      setCloudType("az");
-    } else if (cookies.TiDB_CLOUD_TYPE === "gcp cloud") {
-      console.log("Starting to render gcp template");
-      // setLocation("/product/tidb-clusters-on-gcp");
-      setPathname("/product/tidb-clusters-on-gcp");
-      setCloudType("gcp");
-    } else if (cookies.TiDB_CLOUD_TYPE === "aws cloud") {
-      // setLocation("/product/tidb-clusters-on-aws");
-      setPathname("/product/tidb-clusters-on-aws");
-      setCloudType("aws");
-    }
-  }, [pathname]);
-
-  // https://medium.com/@akshayshan28/building-web-apps-with-react-webassembly-and-go-1a3b2b138b63
-  // https://permify.co/post/wasm-go/
-//  useEffect(() => {
-//    // Function to asynchronously load WebAssembly
-//    async function loadWasm(): Promise<void> {
-//      // Create a new Go object
-//      const goWasm = new window.Go();  
-//      const result = await WebAssembly.instantiateStreaming(
-//        // Fetch and instantiate the main.wasm file
-//        fetch('/tidbonaks/wasm/service.wasm'),  
-//        // Provide the import object to Go for communication with JavaScript
-//        goWasm.importObject  
-//      );
-//      // Run the Go program with the WebAssembly instance
-//      goWasm.run(result.instance);  
-//      setIsWasmLoaded(true); 
-//    }
-//
-//    loadWasm(); 
-//  }, []);
-
-// //-  This is the source code to trigger golang function
-//   const handleClickButton = async () => {
-//     const n = 10;  // Choose a value for n
-// 
-//     console.log('Starting WebAssembly calculation...');
-//     const wasmStartTime = performance.now();
-// 
-//     try {
-//       // Call the wasmFibonacciSum function asynchronously
-//       const result = await wasmFibonacciSum(n);  
-//       console.log(`The wasm result: ${result}`);
-//       console.log('WebAssembly Result:', result);
-//     } catch (error) {
-//       console.error('WebAssembly Error:', error);
-//     }
-// 
-//     const wasmEndTime = performance.now();
-//     console.log(`WebAssembly Calculation Time: ${wasmEndTime - wasmStartTime} ms`);
-//   };
 
   const switchPageContent = (args) => {
     console.log("Switching page between different panels");
     console.log(args);
-    // setLocation(args.theLocation);
     setPathname(args.pathname);
   }
 
@@ -169,21 +120,6 @@ export default () => {
         route={{
           path: '/',
           routes: [
-            {
-              path: '/admin',
-              name: 'Admin',
-              icon: <CrownOutlined />,
-              access: 'canAdmin',
-              component: './Admin',
-              routes: [
-                {
-                  path: '/admin/users',
-                  name: 'User',
-                  icon: <CrownOutlined />,
-                  component: './Welcome01',
-                },
-              ],
-            },
             {
               name: 'Eiken',
               icon: <EikenIcon style={{ fontSize: '32px' }} />,
@@ -214,43 +150,12 @@ export default () => {
                   icon: <CrownOutlined />,
                   component: './Welcome05',
                 },
-                {
-                  path: '/eiken',
-                  name: 'Eiken',
-                  icon: <CrownOutlined />,
-                  children: [
-                    {
-                      path: '/eiken/audio-en-word-2-write',
-                      name: 'Write English From Audio',
-                      icon: <CrownOutlined />,
-                      component: './Welcome02',
-                    },
-                    {
-                      path: '/eiken/jp-word-2-english',
-                      name: 'Write English From JP',
-                      icon: <CrownOutlined />,
-                      component: './Welcome03',
-                    },
-                    {
-                      path: '/eiken/audio-en-sentence-2-write',
-                      name: 'Write English Sentence From Audio',
-                      icon: <CrownOutlined />,
-                      component: './Welcome04',
-                    },
-                    {
-                      path: '/eiken/jp-sentence-2-english',
-                      name: 'Write English Sentence from JP',
-                      icon: <CrownOutlined />,
-                      component: './Welcome05',
-                    },
-                  ],
-                },
               ],
             },
           ],
         }}
         location={{ pathname }}
-        waterMarkProps={{ content: 'Cloud service' }}
+        waterMarkProps={{ content: 'English Corner' }}
         avatarProps={{ icon: <UserOutlined />, size: 'small', title: '七妮妮' }}
         actionsRender={() => [
           <InfoCircleOutlined key="InfoCircleOutlined" />,
@@ -271,8 +176,15 @@ export default () => {
         )}
       >
         <PageContainer>
-          <ProCard style={{ height: '10vh', minHeight: 10 }} >
-            <Button onClick={() => setPathname(`/product/${cloudType}/new`)} >New Cluster</Button>
+          <ProCard style={{ height: '50vh', minHeight: 10 }} >
+            <Flex vertical gap="large" style={{ width: '100%' }}>
+              <ConfigProvider button={{ className: styles.linearGradientButton }} >
+                  <Button type="primary" size="large" icon={<AntDesignOutlined />} onClick={() => alert("Write English From Audio")} >Write English From Audio</Button>
+                  <Button size="large" onClick={() => alert(`Write English From JP`)} >Write English From JP</Button>
+                  <Button size="large" onClick={() => alert(`Write English Sentence From Audio`)} >Write English Sentence From Audio</Button>
+                  <Button size="large" nClick={() => alert(`Write English Sentence from JP`)} >Write English Sentence from JP</Button>
+              </ConfigProvider>
+            </Flex>
           </ProCard>
           <ProCard style={{ height: '120vh', minHeight: 600 }} >
             <MainPage location={pathname} />
