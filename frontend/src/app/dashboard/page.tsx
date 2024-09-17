@@ -56,7 +56,7 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
 }));
 
 export default () => {
-  const [pathname    , setPathname]  = useState('/product/tidb-clusters-on-gcp');
+  const [pathname    , setPathname]  = useState('/init-component');
   const [mounted     , setMounted]   = useState(false);
   const [cookies     , setCookie]    = useCookies(['AUTH_ACCESS_TOKEN'])
   const [form] = Form.useForm<{ name: string; company: string }>();
@@ -96,37 +96,52 @@ export default () => {
    }, [])
 
   const EikenQuesType = () => {
-    if(pathname === "/grade-selection") {
-      return <EikenGrade />
-    }else if(pathname === "/example/eiken/audio-en-word-2-write") {
-      return <EikenCategory />
-    }else {
-      return <EikenGrade />
+    switch (pathname) {
+      case "/init-component":                               return <TopLevel            />
+      case "/eiken/index":                                  return <EikenGrade          />
+      case "/eiken/ques-type":                              return <EikenCategory       />
+      case "/eiken/ques-type/audio2engWord":                return <EikenAudio2Word     />
+      case "/eiken/ques-type/jp2engWord":                   return <EikenJP2Word        />
+      case "/eiken/ques-type/audio2engSentence":            return <EikenAudio2Sentence />
+      case "/eiken/ques-type/jp2engSentence":               return <EikenJP2Sentence    />
+      default:                                              return <TopLevel            />
     }
   }
 
-  // const EikenQuesType = () => {console.log("Calling the Eiken Question Type")};
+  const TopLevel = () => (
+    <Flex vertical gap="large" style={{ width: '100%' }}>
+      <ConfigProvider button={{ className: styles.linearGradientButton }} >
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => setPathname("/eiken/index") } >英検単語</Button>
+          <Button size="large" onClick={() => alert(`Write English From JP`)} >JPREP</Button>
+      </ConfigProvider>
+    </Flex>)
+
   const EikenGrade = () => (
     <Flex vertical gap="large" style={{ width: '100%' }}>
       <ConfigProvider button={{ className: styles.linearGradientButton }} >
-          <Button size="large" icon={<AntDesignOutlined />} onClick={() => alert("Write English From Audio")} >一  級</Button>
-          <Button size="large" onClick={() => alert(`Write English From JP`)} >準一級</Button>
-          <Button size="large" onClick={() => alert(`Write English Sentence From Audio`)} >二  級</Button>
-          <Button size="large" onClick={() => alert(`Write English Sentence from JP`)} >準二級</Button>
-          <Button size="large" onClick={() => alert(`Write English Sentence from JP`)} >三  級</Button>
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => setPathname("/eiken/ques-type")} >一  級</Button>
+          <Button size="large" onClick={() => setPathname("/eiken/ques-type") } >準一級</Button>
+          <Button size="large" onClick={() => setPathname("/eiken/ques-type") } >二  級</Button>
+          <Button size="large" onClick={() => setPathname("/eiken/ques-type") } >準二級</Button>
+          <Button size="large" onClick={() => setPathname("/eiken/ques-type") } >三  級</Button>
       </ConfigProvider>
     </Flex>)
 
   const EikenCategory = () => (
     <Flex vertical gap="large" style={{ width: '100%' }}>
       <ConfigProvider button={{ className: styles.linearGradientButton }} >
-          <Button type="primary" size="large" icon={<AntDesignOutlined />} onClick={() => alert("Write English From Audio")} >Write English From Audio</Button>
-          <Button size="large" onClick={() => alert(`Write English From JP`)} >Write English From JP</Button>
-          <Button size="large" onClick={() => alert(`Write English Sentence From Audio`)} >Write English Sentence From Audio</Button>
-          <Button size="large" nClick={() => alert(`Write English Sentence from JP`)} >Write English Sentence from JP</Button>
+          <Button type="primary" size="large" icon={<AntDesignOutlined />} onClick={() => setPathname("/eiken/ques-type/audio2engWord")} >Write English From Audio</Button>
+          <Button size="large" onClick={() => setPathname("/eiken/ques-type/jp2engWord")}        >Write English From JP</Button>
+          <Button size="large" onClick={() => setPathname("/eiken/ques-type/audio2engSentence")} >Write English Sentence From Audio</Button>
+          <Button size="large" onClick={() => setPathname("/eiken/ques-type/jp2engSentence")}    >Write English Sentence from JP</Button>
       </ConfigProvider>
     </Flex>
   )
+
+  const EikenAudio2Word     = () => ("Todo: Write English Words from Audio");
+  const EikenJP2Word        = () => ("Todo: Write English Words from JP");
+  const EikenAudio2Sentence = () => ("Todo: Write English Sentence from Audio");
+  const EikenJP2Sentence    = () => ("Todo: Write English Sentence from JP");
 
   return mounted && (
     <div id="test-pro-layout" style={{ height: '100vh' }} >
@@ -162,7 +177,7 @@ export default () => {
           if (props?.collapsed) return undefined;
           return (<p style={{ textAlign: 'center', color: 'rgba(0,0,0,0.6)', paddingBlockStart: 12 }} >English Corner</p>);
         }}
-        onMenuHeaderClick={(e) => console.log(e)}
+        onMenuHeaderClick={(e) => { console.log(e); setPathname("/init-component");} }
         menuItemRender={(item, dom) => ( <a onClick={() => { setPathname(item.path || pathname ); }} > {dom} </a>)}
       >
         <PageContainer content={ <EikenQuesType /> } >
