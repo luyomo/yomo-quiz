@@ -58,7 +58,6 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
 export default () => {
   const [pathname    , setPathname]  = useState('/product/tidb-clusters-on-gcp');
   const [mounted     , setMounted]   = useState(false);
-  const [pageRoute   , setPageRoute] = useState("/grade-selection");
   const [cookies     , setCookie]    = useCookies(['AUTH_ACCESS_TOKEN'])
   const [form] = Form.useForm<{ name: string; company: string }>();
   const { styles } = useStyle();
@@ -93,13 +92,13 @@ export default () => {
       console.log("The service worker is not defined in the navigator");
     }
 
-    fetch("/tidbonak/api/v1/tidbclustercreate").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
+//    fetch("/tidbonak/api/v1/tidbclustercreate").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
    }, [])
 
   const EikenQuesType = () => {
-    if(pageRoute === "/grade-selection") {
+    if(pathname === "/grade-selection") {
       return <EikenGrade />
-    }else if(pageRoute === "/example/eiken/audio-en-word-2-write") {
+    }else if(pathname === "/example/eiken/audio-en-word-2-write") {
       return <EikenCategory />
     }else {
       return <EikenGrade />
@@ -129,20 +128,12 @@ export default () => {
     </Flex>
   )
 
-  const switchPageContent = (args) => {
-    console.log("Switching page between different panels");
-    console.log(args);
-    setPageRoute(args.pathname);
-    setPathname(args.pathname);
-  }
-
   return mounted && (
     <div id="test-pro-layout" style={{ height: '100vh' }} >
       <ProLayout
         title="Eiken"
         logo="/example/en-icon.jpg"
         fixSiderbar
-        onPageChange={ switchPageContent }
         route={{
           path: '/',
           routes: [
@@ -151,26 +142,10 @@ export default () => {
               icon: <EikenIcon style={{ fontSize: '32px' }} />,
               path: '/eiken',
               routes: [
-                {
-                  path: '/example/eiken/audio-en-word-2-write',
-                  name: 'Write English From Audio',
-                  icon: <CrownOutlined />,
-                },
-                {
-                  path: '/eiken/jp-word-2-english',
-                  name: 'Write English From JP',
-                  icon: <CrownOutlined />,
-                },
-                {
-                  path: '/eiken/audio-en-sentence-2-write',
-                  name: 'Write English Sentence From Audio',
-                  icon: <CrownOutlined />,
-                },
-                {
-                  path: '/eiken/jp-sentence-2-english',
-                  name: 'Write English Sentence from JP',
-                  icon: <CrownOutlined />,
-                },
+                { path: '/example/eiken/audio-en-word-2-write' , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
+                { path: '/eiken/jp-word-2-english'             , name: 'Write English From JP'             , icon: <CrownOutlined /> },
+                { path: '/eiken/audio-en-sentence-2-write'     , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
+                { path: '/eiken/jp-sentence-2-english'         , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
               ],
             },
           ],
@@ -185,16 +160,10 @@ export default () => {
         ]}
         menuFooterRender={(props) => {
           if (props?.collapsed) return undefined;
-          return (
-            <p style={{ textAlign: 'center', color: 'rgba(0,0,0,0.6)', paddingBlockStart: 12 }} >
-              TiDB Clusters
-            </p>
-          );
+          return (<p style={{ textAlign: 'center', color: 'rgba(0,0,0,0.6)', paddingBlockStart: 12 }} >English Corner</p>);
         }}
         onMenuHeaderClick={(e) => console.log(e)}
-        menuItemRender={(item, dom) => (
-          <a onClick={() => { setPathname(item.path || pathname ); }} > {dom} </a>
-        )}
+        menuItemRender={(item, dom) => ( <a onClick={() => { setPathname(item.path || pathname ); }} > {dom} </a>)}
       >
         <PageContainer content={ <EikenQuesType /> } >
         </PageContainer>
