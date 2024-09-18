@@ -28,7 +28,7 @@ import {
 import type { CountdownProps } from 'antd';
 
 import { Button, Space, ConfigProvider, Form, Select, Input, 
-         Progress, Card,
+         Progress, Card, Checkbox, Typography,
          message, Flex, Statistic } from 'antd';
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useCookies             } from 'react-cookie';
@@ -37,7 +37,7 @@ import { createStyles } from 'antd-style';
 
 const cardStyle: React.CSSProperties = {
   width: 780,
-  height: 480,
+  height: 640,
   margin: 20,
 };
 
@@ -83,6 +83,7 @@ export default () => {
   const [cookies     , setCookie]    = useCookies(['AUTH_ACCESS_TOKEN'])
   const [form] = Form.useForm<{ name: string; company: string }>();
   const { styles } = useStyle();
+  const [skipCheckAnswer, setSkipCheckAnswer] = useState(false);
 
   const [cities, setCities] = useState(cityData[provinceData[0] as CityName]);
   const [secondCity, setSecondCity] = useState(cityData[provinceData[0]][0] as CityName);
@@ -183,6 +184,18 @@ export default () => {
     </Flex>
   )
 
+  const correctnessLabel = `${skipCheckAnswer? 'Count correctness' : 'Skip Correctness'}`;
+  const onSkipCheckAnswer: CheckboxProps['onChange'] = (e) => {
+     setSkipCheckAnswer(e.target.checked);
+  }; ;
+
+  const SkipAnswerProgress = () => {
+    if (!skipCheckAnswer) {
+      return (<Progress type="circle" percent={100*10/18} format={(percent) => '成功率10/18'} />)
+    } 
+  }
+
+
   // phase 01: Check whether it's the first time to access the data. If yes, start it to go through all the words to filter out the unremembered words.
   // 01.01 send request to service worker. 
   // phase 02:
@@ -190,27 +203,35 @@ export default () => {
     <Card hoverable style={cardStyle} styles={{ body: { padding: 20, overflow: 'hidden' } }}>
     <Flex vertical='vertical' justify='space-evenly' gap={ 50 } >
       <Flex justify='space-evenly' align='center'>
+        <Flex vertical='vertical' justify='space-evenly'>
+        <Typography.Title level={5}>Group</Typography.Title>
         <Select
           defaultValue={provinceData[0]}
           style={{ width: 120 }}
           onChange={handleProvinceChange}
           options={provinceData.map((province) => ({ label: province, value: province }))}
         />
+        </Flex>
+        <Flex vertical='vertical' justify='space-evenly'>
+        <Typography.Title level={5}>Section</Typography.Title>
         <Select
           style={{ width: 120 }}
           value={secondCity}
           onChange={onSecondCityChange}
           options={cities.map((city) => ({ label: city, value: city }))}
         />
-        <Button type="primary">Start</Button>
+        </Flex>
+        <Flex vertical='vertical' justify='space-evenly'>
+          <Button type="primary">Start Test</Button>
+          <Checkbox checked={skipCheckAnswer} onChange={ onSkipCheckAnswer}>{correctnessLabel}</Checkbox>
+        </Flex>
       </Flex>
-      
       <Flex justify='space-evenly' align='center'>
         <Progress type="circle" percent={100*18/20} format={percent => `完成率18/20` } />
-        <Progress type="circle" percent={100*10/18} format={(percent) => '成功率10/18'} />
+        <SkipAnswerProgress />
       </Flex>
       <Flex justify='space-evenly' align='center'>
-        <Input placeholder="Basic usage" />
+        <Input placeholder="Please input the words" />
       </Flex>
       <Flex  justify='flex-end'>
         <Countdown title="Seconds" value={Date.now() + 60 * 1000} format="HH:mm:ss" />
