@@ -112,7 +112,7 @@ export default () => {
     setMounted(true);
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration("/tidbonaks/").then((registration) => {
+      navigator.serviceWorker.getRegistration("/example/").then((registration) => {
         if (registration) {
           // This property returns null if the request is a force refresh.
           // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/controller
@@ -124,7 +124,7 @@ export default () => {
           console.log(navigator.serviceWorker.controller);
           if (registration.active && !navigator.serviceWorker.controller) { window.location.reload(); }
         }else {
-          navigator.serviceWorker.register('/tidbonaks/service.js', {scope: "/tidbonaks/"}).then(function(registration) {
+          navigator.serviceWorker.register('/example/service.js', {scope: "/example/"}).then(function(registration) {
 
             // This property returns null if the request is a force refresh.
             // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/controller
@@ -139,6 +139,9 @@ export default () => {
     }
 
 //    fetch("/tidbonak/api/v1/tidbclustercreate").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
+
+    // fetch("/example-backend/api/v1/load-data", {method: "PUT"}).then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
+    fetch("/example-backend/api/v1/eiken-level-info").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
    }, [])
 
   const EikenQuesType = () => {
