@@ -22,7 +22,7 @@ async function loadData(event) {
         const objectStore = transaction.objectStore("eikenLevelInfo");
         jsonObj.map((row) => { 
           // console.log(row);
-          objectStore.add(row, row.id);
+          objectStore.put(row, row.id);
 	})
       } catch(err) {
         console.log(err);
@@ -44,22 +44,30 @@ async function fetchEikenlevelInfo(event) {
 }
 
 async function fetchEikenGroups(event) {
+  let url = new URL(event.request.url);
+  let level = url.searchParams.get('level');
+
   const transaction = eikenDB.transaction(['eikenLevelInfo'], 'readwrite');
   const objectStore = transaction.objectStore("eikenLevelInfo");
   let data = await objectStore.getAll();
   console.log("Fetching data from  fetchEikenGroups");
   console.log(data);
-  let groups = _(data).map("sublevel").uniq();
+  let groups = _(data).filter(row => { return (row.level === level)} ).map("sublevel").uniq();
   console.log(groups);
   return JSON.stringify(groups); 
 }
+
 async function fetchEikenGroupSections(event) {
+  let url = new URL(event.request.url);
+  let level = url.searchParams.get('level');
+  let sublevel = url.searchParams.get('group');
+
   const transaction = eikenDB.transaction(['eikenLevelInfo'], 'readwrite');
   const objectStore = transaction.objectStore("eikenLevelInfo");
   let data = await objectStore.getAll();
   console.log("Fetching data from  fetchEikenGroups");
   console.log(data);
-  let sections = _(data).map("section").uniq();
+  let sections = _(data).filter(row => { return (row.level === level && row.sublevel === sublevel) }).map("section").uniq();
   console.log(sections);
   return JSON.stringify(sections); 
 }
@@ -103,7 +111,8 @@ self.addEventListener('fetch', async event => {
   let url = new URL(event.request.url);
   console.log(event.request);
 
-  console.log(`method: ${event.request.method} url: ${url.pathname}`);
+  console.log(`method: ${event.request.method} url: ${url}, pathname: ${url.pathname}, level: ${url.searchParams.get('level')}`);
+  console.log(url);
   let theFunc = await mapFunc[event.request.method][url.pathname]
   if(theFunc) {
     console.log("func: ------------------------");

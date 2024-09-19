@@ -76,6 +76,8 @@ export default () => {
   const [form] = Form.useForm<{ name: string; company: string }>();
   const { styles } = useStyle();
   const [skipCheckAnswer, setSkipCheckAnswer] = useState(false);
+  const [level, setLevel] = useState("level 3");
+  const [dataType, setDataType] = useState("audio2engWord");
 
   const { Countdown } = Statistic;
 
@@ -118,18 +120,31 @@ export default () => {
     } else {
       console.log("The service worker is not defined in the navigator");
     }
+
+    fetch("/example-backend/api/v1/load-data", {method: "PUT"}).then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
    }, [])
 
   const EikenQuesType = () => {
     switch (pathname) {
-      case "/init-component":                               return <TopLevel            />
-      case "/eiken/index":                                  return <EikenGrade          />
-      case "/eiken/ques-type":                              return <EikenCategory       />
-      case "/eiken/ques-type/audio2engWord":                return <EikenAudio2Word     />
-      case "/eiken/ques-type/jp2engWord":                   return <EikenJP2Word        />
-      case "/eiken/ques-type/audio2engSentence":            return <EikenAudio2Sentence />
-      case "/eiken/ques-type/jp2engSentence":               return <EikenJP2Sentence    />
-      default:                                              return <TopLevel            />
+      case "/init-component":                             return <TopLevel            />
+      case "/eiken/index":                                return <EikenGrade          />
+      case "/eiken/ques-type":                            return <EikenCategory       />
+
+      case "/eiken/ques-type/audio2engWord":              return <EikenAudio2Word     />
+      case "/eiken/ques-type/jp2engWord":                 return <EikenJP2Word        />
+      case "/eiken/ques-type/audio2engSentence":          return <EikenAudio2Sentence />
+      case "/eiken/ques-type/jp2engSentence":             return <EikenJP2Sentence    />
+      default:                                            return <TopLevel            />
+    }
+  }
+
+  const EikenLevelName = (theLevel) => {
+    switch (theLevel) {
+      case "level 1-2":   return "英検一級"
+      case "level 1-1":   return "英検準一"
+      case "level 2-2":   return "英検二級"
+      case "level 2-1":   return "英検準二"
+      case "level 3"  :   return "英検三級"
     }
   }
 
@@ -144,11 +159,26 @@ export default () => {
   const EikenGrade = () => (
     <Flex vertical gap="large" style={{ width: '100%' }}>
       <ConfigProvider button={{ className: styles.linearGradientButton }} >
-          <Button size="large" icon={<AntDesignOutlined />} onClick={() => setPathname("/eiken/ques-type")} >一  級</Button>
-          <Button size="large" onClick={() => setPathname("/eiken/ques-type") } >準一級</Button>
-          <Button size="large" onClick={() => setPathname("/eiken/ques-type") } >二  級</Button>
-          <Button size="large" onClick={() => setPathname("/eiken/ques-type") } >準二級</Button>
-          <Button size="large" onClick={() => setPathname("/eiken/ques-type") } >三  級</Button>
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => {
+            setLevel("level 1-2");
+            setPathname("/eiken/ques-type");}
+          } >一  級</Button>
+          <Button size="large" onClick={() => {
+            setLevel("level 1-1");
+            setPathname("/eiken/ques-type");}
+          } >準一級</Button>
+          <Button size="large" onClick={() => {
+            setLevel("level 2-2");
+            setPathname("/eiken/ques-type"); }
+          } >二  級</Button>
+          <Button size="large" onClick={() => {
+            setLevel("level 2-1");
+            setPathname("/eiken/ques-type");}
+          } >準二級</Button>
+          <Button size="large" onClick={() => {
+            setLevel("level 3");
+            setPathname("/eiken/ques-type");} 
+          } >三  級</Button>
       </ConfigProvider>
     </Flex>)
 
@@ -179,10 +209,12 @@ export default () => {
   // 01.01 send request to service worker. 
   // phase 02:
   const EikenAudio2Word     = () => (
+    <div>
+    <Typography.Title level={5}>{ EikenLevelName(level) } - wrtie words from audio</Typography.Title>
     <Card hoverable style={cardStyle} styles={{ body: { padding: 20, overflow: 'hidden' } }}>
     <Flex vertical='vertical' justify='space-evenly' gap={ 50 } >
       <Flex justify='space-evenly' align='left'>
-        <GroupSectionComp />
+        <GroupSectionComp level={level} />
         <Flex vertical='vertical' justify='space-evenly' gap='large'>
           <Button type="primary">Start Test</Button>
           <Checkbox checked={skipCheckAnswer} onChange={ onSkipCheckAnswer}>{correctnessLabel}</Checkbox>
@@ -200,6 +232,7 @@ export default () => {
       </Flex>
     </Flex>
     </Card>
+    </div>
   );
   const EikenJP2Word        = () => ("Todo: Write English Words from JP");
   const EikenAudio2Sentence = () => ("Todo: Write English Sentence from Audio");
@@ -219,44 +252,44 @@ export default () => {
               icon: <EikenIcon style={{ fontSize: '32px' }} />,
               path: '/eiken/index',
               routes: [
-                { path: '/eiken/ques-type01' , name: '一   級'     , icon: <CrownOutlined />,
+                { path: '/eiken/ques-type1-2' , name: '一   級'     , icon: <CrownOutlined />,
                   routes: [
-                    { path: '/eiken/ques-type/audio2engWord'     , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engWord'        , name: 'Write English From JP'             , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/audio2engSentence' , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engSentence'    , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type1-2/audio2engWord'     , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type1-2/jp2engWord'        , name: 'Write English From JP'             , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type1-2/audio2engSentence' , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type1-2/jp2engSentence'    , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
                   ],
                 },
-                { path: '/eiken/ques-type02' , name: '準一級'      , icon: <CrownOutlined />,
+                { path: '/eiken/ques-type1-1' , name: '準一級'      , icon: <CrownOutlined />,
                   routes: [
-                    { path: '/eiken/ques-type/audio2engWord'     , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engWord'        , name: 'Write English From JP'             , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/audio2engSentence' , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engSentence'    , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type1-1/audio2engWord'     , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type1-1/jp2engWord'        , name: 'Write English From JP'             , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type1-1/audio2engSentence' , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type1-1/jp2engSentence'    , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
                   ],
                 },
-                { path: '/eiken/ques-type03' , name: '二   級'      , icon: <CrownOutlined />,
+                { path: '/eiken/ques-type2-2' , name: '二   級'     , icon: <CrownOutlined />,
                   routes: [
-                    { path: '/eiken/ques-type/audio2engWord'     , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engWord'        , name: 'Write English From JP'             , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/audio2engSentence' , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engSentence'    , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type2-2/audio2engWord'     , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type2-2/jp2engWord'        , name: 'Write English From JP'             , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type2-2/audio2engSentence' , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type2-2/jp2engSentence'    , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
                   ],
                 },
-                { path: '/eiken/ques-type04' , name: '準二級'      , icon: <CrownOutlined />,
+                { path: '/eiken/ques-type2-1' , name: '準二級'      , icon: <CrownOutlined />,
                   routes: [
-                    { path: '/eiken/ques-type/audio2engWord'     , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engWord'        , name: 'Write English From JP'             , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/audio2engSentence' , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engSentence'    , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type2-1/audio2engWord'     , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type2-1/jp2engWord'        , name: 'Write English From JP'             , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type2-1/audio2engSentence' , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type2-1/jp2engSentence'    , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
                   ],
                 },
-                { path: '/eiken/ques-type05' , name: '三   級'      , icon: <CrownOutlined />,
+                { path: '/eiken/ques-type3' , name: '三   級'       , icon: <CrownOutlined />,
                   routes: [
-                    { path: '/eiken/ques-type/audio2engWord'     , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engWord'        , name: 'Write English From JP'             , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/audio2engSentence' , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
-                    { path: '/eiken/ques-type/jp2engSentence'    , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type3/audio2engWord'       , name: 'Write English From Audio'          , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type3/jp2engWord'          , name: 'Write English From JP'             , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type3/audio2engSentence'   , name: 'Write English Sentence From Audio' , icon: <CrownOutlined /> },
+                    { path: '/eiken/ques-type3/jp2engSentence'      , name: 'Write English Sentence from JP'    , icon: <CrownOutlined /> },
                   ],
                 },
               ],
@@ -276,7 +309,17 @@ export default () => {
           return (<p style={{ textAlign: 'center', color: 'rgba(0,0,0,0.6)', paddingBlockStart: 12 }} >English Corner</p>);
         }}
         onMenuHeaderClick={(e) => { console.log(e); setPathname("/init-component");} }
-        menuItemRender={(item, dom) => ( <a onClick={() => { setPathname(item.path || pathname ); }} > {dom} </a>)}
+        menuItemRender={(item, dom) => ( <a onClick={() => {
+          var rx = /\/eiken\/ques-type(.*)\/(.*)/g;
+          var arr = rx.exec(item.path);
+          console.log(arr);
+          if (arr.length === 3) {
+            setPathname(`/eiken/ques-type/${arr[2]}`);
+            setLevel(`level ${arr[1]}`);
+          }else {
+            setPathname(pathname);
+          }
+          }} > {dom} </a>)}
       >
         <PageContainer content={ <EikenQuesType /> } >
         </PageContainer>

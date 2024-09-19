@@ -3,7 +3,7 @@
 import { Select, Typography, Flex } from 'antd';
 import { useState, useEffect } from 'react';
 
-export default () => {
+export default (props) => {
   const [mounted     , setMounted]   = useState(false);
 
   const [group   , setGroup   ] = useState("");
@@ -14,7 +14,7 @@ export default () => {
   const handleGroupChange = (value) => {
     setGroup(value);
 
-    fetch(`/example-backend/api/v1/eiken/sections?level=2-1&group=${value}`)
+    fetch(`/example-backend/api/v1/eiken/sections?level=${props.level}&group=${value}`)
       .then(response => console.log(response.status) || response)
       .then(response => response.text())
       .then(body => {
@@ -27,7 +27,7 @@ export default () => {
   useEffect(() => { 
     setMounted(true);
 
-    fetch("/example-backend/api/v1/eiken/groups?level=2-1")
+    fetch(`/example-backend/api/v1/eiken/groups?level=${props.level}`)
       .then(response => console.log(response.status) || response)
       .then(response => response.text())
       .then(body => {
