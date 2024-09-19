@@ -1,7 +1,7 @@
 'use strict';
 
-//importScripts('/tidbonaks/dist/lodash.js');
-// importScripts('/tidbonaks/dist/lokidb.loki.js');
+importScripts('/example/lib/lodash.js');
+//importScripts('/example/lib/lokidb.loki.js');
 importScripts('https://cdn.jsdelivr.net/npm/idb@8/build/umd.js');
 
 const DBVersion = 1;
@@ -44,6 +44,28 @@ async function fetchEikenlevelInfo(event) {
   console.log(data);
   return JSON.stringify(data); 
 }
+
+async function fetchEikenGroups(event) {
+  const transaction = eikenDB.transaction(['eikenLevelInfo'], 'readwrite');
+  const objectStore = transaction.objectStore("eikenLevelInfo");
+  let data = await objectStore.getAll();
+  console.log("Fetching data from  fetchEikenGroups");
+  console.log(data);
+  let groups = _(data).map("sublevel").uniq();
+  console.log(groups);
+  return JSON.stringify(groups); 
+}
+async function fetchEikenGroupSections(event) {
+  const transaction = eikenDB.transaction(['eikenLevelInfo'], 'readwrite');
+  const objectStore = transaction.objectStore("eikenLevelInfo");
+  let data = await objectStore.getAll();
+  console.log("Fetching data from  fetchEikenGroups");
+  console.log(data);
+  let sections = _(data).map("section").uniq();
+  console.log(sections);
+  return JSON.stringify(sections); 
+}
+ 
 
 //
 //async function putTiDBCluster(event) {
@@ -105,9 +127,9 @@ self.addEventListener('install', async event => {
  
   eikenDB = await idb.openDB(DBName, DBVersion, {
     upgrade(db, oldVersion, newVersion, transaction, event) {
-      event.target.result.createObjectStore('eikenHistory', { keypath: 'id'  });
+      event.target.result.createObjectStore('eikenHistory'  , { keypath: 'id'  });
       event.target.result.createObjectStore('eikenLevelInfo', { keypath: 'id' });
-      event.target.result.createObjectStore('eikenWords', {keypath: 'id' });
+      event.target.result.createObjectStore('eikenWords'    , {keypath: 'id' });
       event.target.result.createObjectStore('userEikenLevel');
     },
   });
@@ -146,6 +168,8 @@ self.addEventListener('install', async event => {
    // mapping initialization  
    const mapGetFunc = new Map();
    mapGetFunc["/example-backend/api/v1/eiken-level-info"]    = fetchEikenlevelInfo;
+   mapGetFunc["/example-backend/api/v1/eiken/groups"]        = fetchEikenGroups;
+   mapGetFunc["/example-backend/api/v1/eiken/sections"]      = fetchEikenGroupSections;
    mapFunc["GET"] = mapGetFunc;
 
    const mapPutFunc = new Map();

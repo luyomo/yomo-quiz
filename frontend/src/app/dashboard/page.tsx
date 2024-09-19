@@ -34,6 +34,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useCookies             } from 'react-cookie';
 import EikenIcon from '../../../icons/EikenIcon.tsx';
 import { createStyles } from 'antd-style';
+import GroupSectionComp from './EikenGroupSection.tsx';
 
 const cardStyle: React.CSSProperties = {
   width: 780,
@@ -76,7 +77,6 @@ const cityData = {
 type CityName = keyof typeof cityData;
 const provinceData: CityName[] = ['Zhejiang', 'Jiangsu'];
 
-
 export default () => {
   const [pathname    , setPathname]  = useState('/init-component');
   const [mounted     , setMounted]   = useState(false);
@@ -85,11 +85,13 @@ export default () => {
   const { styles } = useStyle();
   const [skipCheckAnswer, setSkipCheckAnswer] = useState(false);
 
-  const [cities, setCities] = useState(cityData[provinceData[0] as CityName]);
-  const [secondCity, setSecondCity] = useState(cityData[provinceData[0]][0] as CityName);
+  const [group, setGroup]       = useState("");
+  const [groups, setGroups]     = useState([]);
+  const [section, setSection]   = useState("");
+  const [sections, setSections] = useState([]);
 
-  const handleProvinceChange = (value: CityName) => {
-    setCities(cityData[value]);
+  const handleProvinceChange = (value) => {
+    setGroup(cityData[value]);
     setSecondCity(cityData[value][0] as CityName);
   };
 
@@ -141,7 +143,9 @@ export default () => {
 //    fetch("/tidbonak/api/v1/tidbclustercreate").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
 
     // fetch("/example-backend/api/v1/load-data", {method: "PUT"}).then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
-    fetch("/example-backend/api/v1/eiken-level-info").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
+    // fetch("/example-backend/api/v1/eiken-level-info").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
+
+    // fetch("/example-backend/api/v1/eiken/groups?level=2-1").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
    }, [])
 
   const EikenQuesType = () => {
@@ -190,7 +194,7 @@ export default () => {
   const correctnessLabel = `${skipCheckAnswer? 'Count correctness' : 'Skip Correctness'}`;
   const onSkipCheckAnswer: CheckboxProps['onChange'] = (e) => {
      setSkipCheckAnswer(e.target.checked);
-  }; ;
+  }; 
 
   const SkipAnswerProgress = () => {
     if (!skipCheckAnswer) {
@@ -205,6 +209,7 @@ export default () => {
   const EikenAudio2Word     = () => (
     <Card hoverable style={cardStyle} styles={{ body: { padding: 20, overflow: 'hidden' } }}>
     <Flex vertical='vertical' justify='space-evenly' gap={ 50 } >
+      <GroupSectionComp />
       <Flex justify='space-evenly' align='center'>
         <Flex vertical='vertical' justify='space-evenly'>
         <Typography.Title level={5}>Group</Typography.Title>
@@ -219,9 +224,9 @@ export default () => {
         <Typography.Title level={5}>Section</Typography.Title>
         <Select
           style={{ width: 120 }}
-          value={secondCity}
+          value={section}
           onChange={onSecondCityChange}
-          options={cities.map((city) => ({ label: city, value: city }))}
+          options={sections.map((city) => ({ label: city, value: city }))}
         />
         </Flex>
         <Flex vertical='vertical' justify='space-evenly'>
