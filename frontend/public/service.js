@@ -42,7 +42,7 @@ async function fetchEikenlevelInfo(event) {
   let data = await objectStore.getAll();
   console.log("Fetching data from fetchEikenLevelInfo");
   console.log(data);
-  return "Starting to fetch Eiken level info";
+  return JSON.stringify(data); 
 }
 
 //
@@ -100,50 +100,60 @@ async function fetchEikenlevelInfo(event) {
 //  return "Starting to create the tidb cluster";
 //}
 
-self.addEventListener('install', event => {
+self.addEventListener('install', async event => {
   console.log('installing service worker');
  
-   event.waitUntil(
-     new Promise((resolve, reject) => {
-       const request = self.indexedDB.open(DBName, DBVersion);
-  
-       request.onerror = event => {
-         console.log('error opening IndexedDB');
-         console.log(event);
-         reject();
-       };
-  
-       request.onsuccess = event => {
-         const db = event.target.result;
-  
-         db.onerror = event => {
-           console.log('error opening IndexedDB');
-         };
-  
-         resolve(db);
-       };
-  
-       request.onupgradeneeded = event => {
-         event.target.result.createObjectStore('eikenHistory', { keypath: 'id'  });
-         event.target.result.createObjectStore('eikenLevelInfo', { keypath: 'id' });
-         event.target.result.createObjectStore('eikenWords', {keypath: 'id' });
-         event.target.result.createObjectStore('userEikenLevel');
-       };
-     }).then(db => {
-         eikenDB = db;
-     })
-   );
+  eikenDB = await idb.openDB(DBName, DBVersion, {
+    upgrade(db, oldVersion, newVersion, transaction, event) {
+      event.target.result.createObjectStore('eikenHistory', { keypath: 'id'  });
+      event.target.result.createObjectStore('eikenLevelInfo', { keypath: 'id' });
+      event.target.result.createObjectStore('eikenWords', {keypath: 'id' });
+      event.target.result.createObjectStore('userEikenLevel');
+    },
+  });
 
-   
+//   event.waitUntil(
+//     new Promise((resolve, reject) => {
+//       const request = self.indexedDB.open(DBName, DBVersion);
+//  
+//       request.onerror = event => {
+//         console.log('error opening IndexedDB');
+//         console.log(event);
+//         reject();
+//       };
+//  
+//       request.onsuccess = event => {
+//         const db = event.target.result;
+//  
+//         db.onerror = event => {
+//           console.log('error opening IndexedDB');
+//         };
+//  
+//         resolve(db);
+//       };
+//  
+//       request.onupgradeneeded = event => {
+//         event.target.result.createObjectStore('eikenHistory', { keypath: 'id'  });
+//         event.target.result.createObjectStore('eikenLevelInfo', { keypath: 'id' });
+//         event.target.result.createObjectStore('eikenWords', {keypath: 'id' });
+//         event.target.result.createObjectStore('userEikenLevel');
+//       };
+//     }).then(db => {
+//         eikenDB = db;
+//     })
+//   );
+
+   // mapping initialization  
    const mapGetFunc = new Map();
    mapGetFunc["/example-backend/api/v1/eiken-level-info"]    = fetchEikenlevelInfo;
-
    mapFunc["GET"] = mapGetFunc;
 
    const mapPutFunc = new Map();
    mapPutFunc["/example-backend/api/v1/load-data"]    =  loadData;
-
    mapFunc["PUT"] = mapPutFunc;
+
+   const mapPostFunc = new Map();
+   mapFunc["POST"] = mapPostFunc;
 });
 
 self.addEventListener('activate', event => {
@@ -156,9 +166,9 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', async event => {
   let url = new URL(event.request.url);
-//  console.log(event.request);
+  console.log(event.request);
 
-//  console.log("url: ", url.pathname);
+  console.log(`method: ${event.request.method} url: ${url.pathname}`);
   let theFunc = await mapFunc[event.request.method][url.pathname]
   if(theFunc) {
     console.log("func: ------------------------");
