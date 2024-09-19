@@ -10,8 +10,6 @@ var eikenDB;
 const mapFunc = new Map();
 
 async function loadData(event) {
-//  transaction.objectStore('eikenLevelInfo').put({type: "put", functionName: "createTiDBCluster" }, "/tidbonak/api/v1/tidbcluster");
-
   fetch("/example-backend/api/v1/eiken-level-info")
     .then(response => console.log(response.status) || response)
     .then(response => response.text())
@@ -65,105 +63,18 @@ async function fetchEikenGroupSections(event) {
   console.log(sections);
   return JSON.stringify(sections); 
 }
- 
-
-//
-//async function putTiDBCluster(event) {
-//  console.log("----- putTiDBCluster -----");
-//  let clusterRes = await event.request.clone().json();
-//  console.log(clusterRes);
-//
-//  let mapAKSCluster = new Map();
-//  mapAKSCluster["ID"] = 1;
-//  mapAKSCluster["JobName"] = "AKSClusterCreation";
-//  mapAKSCluster["JobName"] = "AKSClusterCreation";
-//  mapAKSCluster["State"  ] = "init";
-//
-//  let mapParams = new Map();
-//  mapParams["ClusterName"  ] = clusterRes.ClusterName  ;
-//  mapParams["Region"       ] = clusterRes.Region       ;
-//  mapParams["Subscription" ] = clusterRes.Subscription ;
-//  mapParams["ResourceGroup"] = clusterRes.ResourceGroup;
-//  mapParams["SshKeyList"   ] = clusterRes.SshKeyList   ;
-//  mapParams["K8SVersion"   ] = clusterRes.K8SVersion   ;
-//  mapParams["CIDR"         ] = clusterRes.CIDR         ;
-//
-//  mapAKSCluster["Params"] = mapParams;
-//
-//  console.log(mapAKSCluster);
-//
-//  let tx = metaDB.transaction('jobs', 'readwrite');
-//  let jobs = tx.objectStore('jobs');
-//  jobs.put(mapAKSCluster, clusterRes.ClusterName);
-////  mapAKSCluster["CreatedAT"] =  GetCurrentTimestamp;
-//
-//
-//// {
-////  "ClusterName": "localtest",
-////    "ClusterVersion": "v7.5.0",
-////    "Region": "eastus",
-////    "Subscription": "7a04faac-a110-4796-bf3e-84afd6037b8f",
-////    "ResourceGroup": "jp-presale-test",
-////    "SshKeyList": "jay-key",
-////    "K8SVersion": "1.29.2",
-////    "TiDBNumOfNodes": 1,
-////    "TiDBVMSize": "2C7G",
-////    "TiKVNumOfNodes": 1,
-////    "TiKVVMSize": "2C7G",
-////    "TiKVDiskSize": 50,
-////    "TiFlashNumOfNodes": 1,
-////    "TiFlashVMSize": "2C7G",
-////    "TiFlashDiskSize": 50,
-////    "AppGWID": [
-////            ""
-////        ],
-////    "CIDR": "192.168.1.1/24"
-//// }
-//  return "Starting to create the tidb cluster";
-//}
 
 self.addEventListener('install', async event => {
   console.log('installing service worker');
  
   eikenDB = await idb.openDB(DBName, DBVersion, {
     upgrade(db, oldVersion, newVersion, transaction, event) {
-      event.target.result.createObjectStore('eikenHistory'  , { keypath: 'id'  });
+      event.target.result.createObjectStore('eikenHistory'  , { keypath: 'id' });
       event.target.result.createObjectStore('eikenLevelInfo', { keypath: 'id' });
-      event.target.result.createObjectStore('eikenWords'    , {keypath: 'id' });
+      event.target.result.createObjectStore('eikenWords'    , { keypath: 'id' });
       event.target.result.createObjectStore('userEikenLevel');
     },
   });
-
-//   event.waitUntil(
-//     new Promise((resolve, reject) => {
-//       const request = self.indexedDB.open(DBName, DBVersion);
-//  
-//       request.onerror = event => {
-//         console.log('error opening IndexedDB');
-//         console.log(event);
-//         reject();
-//       };
-//  
-//       request.onsuccess = event => {
-//         const db = event.target.result;
-//  
-//         db.onerror = event => {
-//           console.log('error opening IndexedDB');
-//         };
-//  
-//         resolve(db);
-//       };
-//  
-//       request.onupgradeneeded = event => {
-//         event.target.result.createObjectStore('eikenHistory', { keypath: 'id'  });
-//         event.target.result.createObjectStore('eikenLevelInfo', { keypath: 'id' });
-//         event.target.result.createObjectStore('eikenWords', {keypath: 'id' });
-//         event.target.result.createObjectStore('userEikenLevel');
-//       };
-//     }).then(db => {
-//         eikenDB = db;
-//     })
-//   );
 
    // mapping initialization  
    const mapGetFunc = new Map();

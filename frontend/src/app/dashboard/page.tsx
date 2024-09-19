@@ -69,14 +69,6 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
   `,
 }));
 
-
-const cityData = {
-  Zhejiang: ['Hangzhou', 'Ningbo', 'Wenzhou'],
-  Jiangsu: ['Nanjing', 'Suzhou', 'Zhenjiang'],
-};
-type CityName = keyof typeof cityData;
-const provinceData: CityName[] = ['Zhejiang', 'Jiangsu'];
-
 export default () => {
   const [pathname    , setPathname]  = useState('/init-component');
   const [mounted     , setMounted]   = useState(false);
@@ -85,20 +77,7 @@ export default () => {
   const { styles } = useStyle();
   const [skipCheckAnswer, setSkipCheckAnswer] = useState(false);
 
-  const [group, setGroup]       = useState("");
-  const [groups, setGroups]     = useState([]);
-  const [section, setSection]   = useState("");
-  const [sections, setSections] = useState([]);
-
-  const handleProvinceChange = (value) => {
-    setGroup(cityData[value]);
-    setSecondCity(cityData[value][0] as CityName);
-  };
-
   const { Countdown } = Statistic;
-  const onSecondCityChange = (value: CityName) => {
-    setSecondCity(value);
-  };
 
   const onFinish: CountdownProps['onFinish'] = () => {
     console.log('finished!');
@@ -139,13 +118,6 @@ export default () => {
     } else {
       console.log("The service worker is not defined in the navigator");
     }
-
-//    fetch("/tidbonak/api/v1/tidbclustercreate").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
-
-    // fetch("/example-backend/api/v1/load-data", {method: "PUT"}).then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
-    // fetch("/example-backend/api/v1/eiken-level-info").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
-
-    // fetch("/example-backend/api/v1/eiken/groups?level=2-1").then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
    }, [])
 
   const EikenQuesType = () => {
@@ -209,27 +181,9 @@ export default () => {
   const EikenAudio2Word     = () => (
     <Card hoverable style={cardStyle} styles={{ body: { padding: 20, overflow: 'hidden' } }}>
     <Flex vertical='vertical' justify='space-evenly' gap={ 50 } >
-      <GroupSectionComp />
-      <Flex justify='space-evenly' align='center'>
-        <Flex vertical='vertical' justify='space-evenly'>
-        <Typography.Title level={5}>Group</Typography.Title>
-        <Select
-          defaultValue={provinceData[0]}
-          style={{ width: 120 }}
-          onChange={handleProvinceChange}
-          options={provinceData.map((province) => ({ label: province, value: province }))}
-        />
-        </Flex>
-        <Flex vertical='vertical' justify='space-evenly'>
-        <Typography.Title level={5}>Section</Typography.Title>
-        <Select
-          style={{ width: 120 }}
-          value={section}
-          onChange={onSecondCityChange}
-          options={sections.map((city) => ({ label: city, value: city }))}
-        />
-        </Flex>
-        <Flex vertical='vertical' justify='space-evenly'>
+      <Flex justify='space-evenly' align='left'>
+        <GroupSectionComp />
+        <Flex vertical='vertical' justify='space-evenly' gap='large'>
           <Button type="primary">Start Test</Button>
           <Checkbox checked={skipCheckAnswer} onChange={ onSkipCheckAnswer}>{correctnessLabel}</Checkbox>
         </Flex>
