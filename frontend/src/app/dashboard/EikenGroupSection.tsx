@@ -21,6 +21,8 @@ export default (props) => {
 
   const { Countdown } = Statistic;
 
+  const synth = window.speechSynthesis;
+
   const onFinish: CountdownProps['onFinish'] = () => {
     console.log('finished!');
   };
@@ -76,13 +78,58 @@ export default (props) => {
     } 
   }
 
+  // https://github.com/BradBarkel/js-text-to-speech/blob/master/dist/js/main.js
   const TestProcess = () => {
+
     alert("Starting the process")
     fetch("/example-backend/api/v1/data/word-audio-2-write")
       .then(response => console.log(response.status) || response)
       .then(response => response.text())
-      .then(body => console.log(`console output from function: ${body}`));
+      .then(body => {
+        console.log(`console output from function: ${body}`);
+        let jsonData = JSON.parse(body);
+        console.log(body);
+        let loop = setInterval(()=>{
+          let word = jsonData.shift();
+          console.log(word);
+          SpeakEnglish(word.enword);
+          if(jsonData.length === 0) {
+            clearInterval(loop);
+          }
+        }, 2000)
+    });
   }
+
+  const SpeakEnglish = (inputText) => {
+    if (synth.speaking) {
+      console.error("already speaking");
+      return;
+    }
+    const speakText = new SpeechSynthesisUtterance(inputText);
+    //Speak end
+    speakText.onend = e => {
+      // body.style.background = "#141414";
+    };
+
+    //Speak error
+    speakText.onerror = e => {
+      console.error("Something went wrong...");
+    };
+
+    //Selected voice
+    // const selectedVoice = voiceSelect.selectedOptions[0].getAttribute("data-name");
+    //Loop through the voices
+    //    voices.forEach(voice => {
+    //      if (voice.name === selectedVoice) {
+    //        speakText.voice = voice;
+    //      }
+    //    });
+    //Set pitch and rate
+    //    speakText.rate = rate.value;
+    //    speakText.pitch = pitch.value;
+
+    synth.speak(speakText);
+  };
 
   return mounted && (
     <div>

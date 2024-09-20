@@ -76,7 +76,7 @@ async function fetchWords4Audio(event) {
 
   console.log("Fetch words in the fetchWords4Audio");
   console.log(data);
-  let words = _(data).filter(row => { return (row.levelid === 1)} ).map(_v => _.pick(_v, ["id", "enword"])).value();
+  let words = _(data).filter(row => { return (row.levelid === 1)} ).map(_v => _.pick(_v, ["id", "enword"])).sortBy(["id"]).value();
   // let words = _(data).filter(row => { return (row.levelid === 1)} ).value();
   console.log(words);
   return JSON.stringify(words); 
