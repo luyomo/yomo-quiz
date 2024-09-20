@@ -32,7 +32,20 @@ async function loadData(event) {
     });
   return "Data update request has been done.";
 }
+async function postUserInfo(event) {
+  console.log("---------- posting user info");
+//  let bodyData = await event.request.body.getReader().read();
+//  console.log(bodyData);
+  const json = await event.request.json();
+  console.log(json);
 
+  const transaction = eikenDB.transaction(['userInfo'], 'readwrite');
+  const objectStore = transaction.objectStore("userInfo");
+  await objectStore.clear();
+  await objectStore.put(json, json.email);
+  return "Pushed the user info";
+}
+  
 async function fetchEikenlevelInfo(event) {
 
   const transaction = eikenDB.transaction(['eikenLevelInfo'], 'readwrite');
@@ -81,6 +94,8 @@ self.addEventListener('install', async event => {
       event.target.result.createObjectStore('eikenLevelInfo', { keypath: 'id' });
       event.target.result.createObjectStore('eikenWords'    , { keypath: 'id' });
       event.target.result.createObjectStore('userEikenLevel');
+
+      event.target.result.createObjectStore('userInfo');
     },
   });
 
@@ -96,6 +111,7 @@ self.addEventListener('install', async event => {
    mapFunc["PUT"] = mapPutFunc;
 
    const mapPostFunc = new Map();
+   mapPostFunc["/example-backend/api/v1/user-info"]   =  postUserInfo;
    mapFunc["POST"] = mapPostFunc;
 });
 
@@ -113,6 +129,7 @@ self.addEventListener('fetch', async event => {
 
   console.log(`method: ${event.request.method} url: ${url}, pathname: ${url.pathname}, level: ${url.searchParams.get('level')}`);
   console.log(url);
+  if(url === undefined) { return }
   let theFunc = await mapFunc[event.request.method][url.pathname]
   if(theFunc) {
     console.log("func: ------------------------");

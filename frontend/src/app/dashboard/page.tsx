@@ -72,12 +72,12 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
 export default () => {
   const [pathname    , setPathname]  = useState('/init-component');
   const [mounted     , setMounted]   = useState(false);
-  const [cookies     , setCookie]    = useCookies(['AUTH_ACCESS_TOKEN'])
   const [form] = Form.useForm<{ name: string; company: string }>();
   const { styles } = useStyle();
   const [skipCheckAnswer, setSkipCheckAnswer] = useState(false);
   const [level, setLevel] = useState("level 3");
   const [dataType, setDataType] = useState("audio2engWord");
+  const [cookies, setCookie] = useCookies([]);
 
   const { Countdown } = Statistic;
 
@@ -94,34 +94,34 @@ export default () => {
   useEffect(() => { 
     setMounted(true);
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration("/example/").then((registration) => {
-        if (registration) {
-          // This property returns null if the request is a force refresh.
-          // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/controller
-          console.log("Registration ----------- ");
-          console.log(registration);
-          navigator.serviceWorker.ready.then(() => {
-              console.log('----- ready!');
-          });
-          console.log(navigator.serviceWorker.controller);
-          if (registration.active && !navigator.serviceWorker.controller) { window.location.reload(); }
-        }else {
-          navigator.serviceWorker.register('/example/service.js', {scope: "/example/"}).then(function(registration) {
+//    if ('serviceWorker' in navigator) {
+//      navigator.serviceWorker.getRegistration("/example/").then((registration) => {
+//        if (registration) {
+//          // This property returns null if the request is a force refresh.
+//          // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/controller
+//          console.log("Registration ----------- ");
+//          console.log(registration);
+//          navigator.serviceWorker.ready.then(() => {
+//              console.log('----- ready!');
+//          });
+//          console.log(navigator.serviceWorker.controller);
+//          if (registration.active && !navigator.serviceWorker.controller) { window.location.reload(); }
+//        }else {
+//          navigator.serviceWorker.register('/example/service.js', {scope: "/example/"}).then(function(registration) {
+//
+//            // This property returns null if the request is a force refresh.
+//            // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/controller
+//            if (registration.active && !navigator.serviceWorker.controller) { window.location.reload() }
+//          }, function(err) {
+//            console.log('ServiceWorker registration failed: ', err);
+//          });
+//        };
+//      });
+//    } else {
+//      console.log("The service worker is not defined in the navigator");
+//      fetch("/example-backend/api/v1/load-data", {method: "PUT"}).then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
+//    }
 
-            // This property returns null if the request is a force refresh.
-            // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/controller
-            if (registration.active && !navigator.serviceWorker.controller) { window.location.reload() }
-          }, function(err) {
-            console.log('ServiceWorker registration failed: ', err);
-          });
-        };
-      });
-    } else {
-      console.log("The service worker is not defined in the navigator");
-    }
-
-    fetch("/example-backend/api/v1/load-data", {method: "PUT"}).then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
    }, [])
 
   const EikenQuesType = () => {
@@ -298,7 +298,7 @@ export default () => {
         }}
         location={{ pathname }}
         waterMarkProps={{ content: 'English Corner' }}
-        avatarProps={{ icon: <UserOutlined />, size: 'small', title: '七妮妮' }}
+        avatarProps={{ src: cookies.user_icon, size: 'small', title: cookies.user_name }}
         actionsRender={() => [
           <InfoCircleOutlined key="InfoCircleOutlined" />,
           <QuestionCircleOutlined key="QuestionCircleOutlined" />,

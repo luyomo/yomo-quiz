@@ -4,25 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
-import {
-  GoogleSquareFilled,
-  GoogleOutlined,
-  AlipayOutlined,
-  LockOutlined,
-  MobileOutlined,
-  TaobaoOutlined,
-  UserOutlined,
-  WeiboOutlined,
-} from '@ant-design/icons';
+import { UserOutlined, } from '@ant-design/icons';
 
 import {
   LoginFormPage,
   ProConfigProvider,
-  ProFormCaptcha,
-  ProFormCheckbox,
   ProFormText,
 } from '@ant-design/pro-components';
-import { Button, Divider, Space, Tabs, message, theme } from 'antd';
+import { Tabs, message, theme } from 'antd';
 import type { CSSProperties } from 'react';
 
 type LoginType = 'azure' | 'gcp';
@@ -70,9 +59,45 @@ const Page = () => {
     console.log("exp:", jsonPayload.exp);
     console.log("jti:", jsonPayload.jti);
 
+    fetch("/example-backend/api/v1/user-info", {method: "POST", body: JSON.stringify(jsonPayload)} ).then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
+    fetch("/example-backend/api/v1/load-data", {method: "PUT"}).then(response => console.log(response.status) || response).then(response => response.text()).then(body => console.log(`console output from function: ${body}`));
+
+    setCookie('user_email', jsonPayload.email, { path: '/'});
+    setCookie('user_icon', jsonPayload.picture, { path: '/'});
+    setCookie('user_name', jsonPayload.name, { path: '/'});
+
     location.href="/example/dashboard"
 
   };
+
+    const loadServiceWorker = () => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration("/example/").then((registration) => {
+        if (registration) {
+          // This property returns null if the request is a force refresh.
+          // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/controller
+          console.log("Registration ----------- ");
+          console.log(registration);
+          navigator.serviceWorker.ready.then(() => {
+              console.log('----- ready!');
+          });
+          console.log(navigator.serviceWorker.controller);
+          if (registration.active && !navigator.serviceWorker.controller) { window.location.reload(); }
+        }else {
+          navigator.serviceWorker.register('/example/service.js', {scope: "/example/"}).then(function(registration) {
+
+            // This property returns null if the request is a force refresh.
+            // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/controller
+            if (registration.active && !navigator.serviceWorker.controller) { window.location.reload() }
+          }, function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        };
+      });
+    } else {
+      console.log("The service worker is not defined in the navigator");
+    }
+  }
 
   const handleError = () => {
     // Handle login errors here
@@ -124,6 +149,11 @@ const Page = () => {
 
   }
 
+
+  useEffect(() => { 
+    loadServiceWorker()
+  })
+
   const azureLogin = (values) => {
     console.log("--------------------------"); 
     console.log(values);
@@ -149,7 +179,7 @@ const Page = () => {
         backgroundImageUrl="https://images.pexels.com/photos/1166644/pexels-photo-1166644.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
         logo="https://cdn.iconscout.com/icon/free/png-512/free-geek-icon-download-in-svg-png-gif-file-formats--brainy-studious-specs-cool-kiddo-pack-sports-games-icons-160919.png"
         backgroundVideoUrl="https://gw.alipayobjects.com/v/huamei_gcee1x/afts/video/jXRBRK_VAwoAAAAAAAAAAAAAK4eUAQBr"
-        title="Hello World"
+        title="English Corner"
         containerStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)' }}
         subTitle="AZURE"
         onFinish={ onLogin }
