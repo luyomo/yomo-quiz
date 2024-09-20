@@ -10,6 +10,27 @@ var eikenDB;
 const mapFunc = new Map();
 
 async function loadData(event) {
+  fetch("/example-backend/api/v1/eiken-words")
+    .then(response => console.log(response.status) || response)
+    .then(response => response.text())
+    .then(body => {
+      console.log(`Fetched data from service: ${body}`);
+      try {
+        let jsonObj = JSON.parse(body);
+        // console.log(jsonObj);
+        const transaction = eikenDB.transaction(['eikenWords'], 'readwrite');
+        const objectStore = transaction.objectStore("eikenWords");
+        jsonObj.map((row) => { 
+          // console.log(row);
+          objectStore.put(row, row.);
+	})
+      } catch(err) {
+        console.log(err);
+      }
+    }).catch(err => {
+      console.log(err);
+    });
+
   fetch("/example-backend/api/v1/eiken-level-info")
     .then(response => console.log(response.status) || response)
     .then(response => response.text())
