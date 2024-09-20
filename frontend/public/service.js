@@ -22,7 +22,7 @@ async function loadData(event) {
         const objectStore = transaction.objectStore("eikenWords");
         jsonObj.map((row) => { 
           // console.log(row);
-          objectStore.put(row, row.);
+          objectStore.put(row, row.enword);
 	})
       } catch(err) {
         console.log(err);
@@ -67,6 +67,21 @@ async function postUserInfo(event) {
   return "Pushed the user info";
 }
   
+async function fetchWords4Audio(event) {
+  // According to the level/group/section to get the id to fetch the words
+
+  const transaction = eikenDB.transaction(['eikenWords'], 'readwrite');
+  const objectStore = transaction.objectStore("eikenWords");
+  let data = await objectStore.getAll();
+
+  console.log("Fetch words in the fetchWords4Audio");
+  console.log(data);
+  let words = _(data).filter(row => { return (row.levelid === 1)} ).map(_v => _.pick(_v, ["id", "enword"])).value();
+  // let words = _(data).filter(row => { return (row.levelid === 1)} ).value();
+  console.log(words);
+  return JSON.stringify(words); 
+}
+
 async function fetchEikenlevelInfo(event) {
 
   const transaction = eikenDB.transaction(['eikenLevelInfo'], 'readwrite');
@@ -122,9 +137,10 @@ self.addEventListener('install', async event => {
 
    // mapping initialization  
    const mapGetFunc = new Map();
-   mapGetFunc["/example-backend/api/v1/eiken-level-info"]    = fetchEikenlevelInfo;
-   mapGetFunc["/example-backend/api/v1/eiken/groups"]        = fetchEikenGroups;
-   mapGetFunc["/example-backend/api/v1/eiken/sections"]      = fetchEikenGroupSections;
+   mapGetFunc["/example-backend/api/v1/eiken-level-info"]         = fetchEikenlevelInfo;
+   mapGetFunc["/example-backend/api/v1/eiken/groups"]             = fetchEikenGroups;
+   mapGetFunc["/example-backend/api/v1/eiken/sections"]           = fetchEikenGroupSections;
+   mapGetFunc["/example-backend/api/v1/data/word-audio-2-write"]  = fetchWords4Audio;
    mapFunc["GET"] = mapGetFunc;
 
    const mapPutFunc = new Map();

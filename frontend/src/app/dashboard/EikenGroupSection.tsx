@@ -1,15 +1,44 @@
 "use client";
 
-import { Select, Typography, Flex } from 'antd';
+import { Select, Typography, Flex, Statistic, Checkbox, Button, Card, Progress, Input } from 'antd';
 import { useState, useEffect } from 'react';
+import type { CountdownProps } from 'antd';
+
+const cardStyle: React.CSSProperties = {
+  width: 780,
+  height: 640,
+  margin: 20,
+};
 
 export default (props) => {
   const [mounted     , setMounted]   = useState(false);
 
+  const [skipCheckAnswer, setSkipCheckAnswer] = useState(false);
   const [group   , setGroup   ] = useState("");
   const [groups  , setGroups  ] = useState([]);
   const [section , setSection ] = useState("");
   const [sections, setSections] = useState([]);
+
+  const { Countdown } = Statistic;
+
+  const onFinish: CountdownProps['onFinish'] = () => {
+    console.log('finished!');
+  };
+
+  const onChange: CountdownProps['onChange'] = (val) => {
+    if (typeof val === 'number' && 4.95 * 1000 < val && val < 5 * 1000) {
+      console.log('changed!');
+    }
+  };
+  const EikenLevelName = (theLevel) => {
+    switch (theLevel) {
+      case "level 1-2":   return "英検一級"
+      case "level 1-1":   return "英検準一"
+      case "level 2-2":   return "英検二級"
+      case "level 2-1":   return "英検準二"
+      case "level 3"  :   return "英検三級"
+    }
+  };
 
   const handleGroupChange = (value) => {
     setGroup(value);
@@ -36,26 +65,66 @@ export default (props) => {
         setGroups(jsonData); });
    }, [])
 
+  const correctnessLabel = `${skipCheckAnswer? 'Count correctness' : 'Skip Correctness'}`;
+  const onSkipCheckAnswer: CheckboxProps['onChange'] = (e) => {
+     setSkipCheckAnswer(e.target.checked);
+  }; 
+
+  const SkipAnswerProgress = () => {
+    if (!skipCheckAnswer) {
+      return (<Progress type="circle" percent={100*10/18} format={(percent) => '成功率10/18'} />)
+    } 
+  }
+
+  const TestProcess = () => {
+    alert("Starting the process")
+    fetch("/example-backend/api/v1/data/word-audio-2-write")
+      .then(response => console.log(response.status) || response)
+      .then(response => response.text())
+      .then(body => console.log(`console output from function: ${body}`));
+  }
+
   return mounted && (
-    <Flex justify='space-evenly' align='center' gap={ 80 }>
-      <Flex vertical='vertical' justify='space-evenly'>
-        <Typography.Title level={5}>Group</Typography.Title>
-        <Select
-          defaultValue={groups[0]}
-          style={{ width: 120 }}
-          onChange={handleGroupChange}
-          options={groups.map((group) => ({ label: `Group ${group}`, value: group }))}
-        />
+    <div>
+    <Typography.Title level={5}>{ EikenLevelName(props.level) } - wrtie words from audio</Typography.Title>
+    <Card hoverable style={cardStyle} styles={{ body: { padding: 20, overflow: 'hidden' } }}>
+    <Flex vertical='vertical' justify='space-evenly' gap={ 50 } >
+      <Flex justify='space-evenly' align='center' gap={ 80 }>
+        <Flex vertical='vertical' justify='space-evenly'>
+          <Typography.Title level={5}>Group</Typography.Title>
+          <Select
+            defaultValue={groups[0]}
+            style={{ width: 120 }}
+            onChange={handleGroupChange}
+            options={groups.map((group) => ({ label: `Group ${group}`, value: group }))}
+          />
+        </Flex>
+        <Flex vertical='vertical' justify='space-evenly'>
+          <Typography.Title level={5}>Section</Typography.Title>
+          <Select
+            style={{ width: 120 }}
+            value={section}
+            onChange={onSectionChange}
+            options={sections.map((section) => ({ label: `Section ${section}`, value: section }))}
+          />
+        </Flex>
+        <Flex vertical='vertical' justify='space-evenly' gap='large'>
+          <Button type="primary" onClick={ TestProcess }>Start Test</Button>
+          <Checkbox checked={skipCheckAnswer} onChange={ onSkipCheckAnswer}>{correctnessLabel}</Checkbox>
+        </Flex>
       </Flex>
-      <Flex vertical='vertical' justify='space-evenly'>
-        <Typography.Title level={5}>Section</Typography.Title>
-        <Select
-          style={{ width: 120 }}
-          value={section}
-          onChange={onSectionChange}
-          options={sections.map((section) => ({ label: `Section ${section}`, value: section }))}
-        />
+      <Flex justify='space-evenly' align='center'>
+        <Progress type="circle" percent={100*18/20} format={percent => `完成率18/20` } />
+        <SkipAnswerProgress />
+      </Flex>
+      <Flex justify='space-evenly' align='center'>
+        <Input placeholder="Please input the words" />
+      </Flex>
+      <Flex  justify='flex-end'>
+        <Countdown title="Seconds" value={Date.now() + 60 * 1000} format="HH:mm:ss" onFinish={ () => {alert("Completed the count down")} } />
       </Flex>
     </Flex>
+    </Card>
+    </div>
   );
 };
