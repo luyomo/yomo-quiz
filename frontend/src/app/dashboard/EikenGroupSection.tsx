@@ -80,22 +80,26 @@ export default (props) => {
 
   // https://github.com/BradBarkel/js-text-to-speech/blob/master/dist/js/main.js
   const TestProcess = () => {
-
-    alert("Starting the process")
-    fetch("/example-backend/api/v1/data/word-audio-2-write")
+    fetch(`/example-backend/api/v1/data/word-audio-2-write?level=${props.level}&group=${group}&section=${section}`)
       .then(response => console.log(response.status) || response)
       .then(response => response.text())
       .then(body => {
         console.log(`console output from function: ${body}`);
         let jsonData = JSON.parse(body);
         console.log(body);
+        if (jsonData.length === 0) {
+          SpeakEnglish("No available words for the specific section.");
+          return;
+        }
         let loop = setInterval(()=>{
+          if(jsonData.length === 0) {
+            SpeakEnglish("The test has completed. Please check the result.");
+            clearInterval(loop);
+            return;
+          }
           let word = jsonData.shift();
           console.log(word);
           SpeakEnglish(word.enword);
-          if(jsonData.length === 0) {
-            clearInterval(loop);
-          }
         }, 2000)
     });
   }

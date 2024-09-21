@@ -67,8 +67,27 @@ async function postUserInfo(event) {
   return "Pushed the user info";
 }
   
+async function fetchSectionID(event) {
+  let url = new URL(event.request.url);
+  let level = url.searchParams.get('level');
+  let group = url.searchParams.get('group');
+  let section = url.searchParams.get('section');
+
+  const transaction = eikenDB.transaction(['eikenLevelInfo'], 'readwrite');
+  const objectStore = transaction.objectStore("eikenLevelInfo");
+  let data = await objectStore.getAll();
+  let ids = _(data).filter(row => { return (row.level === level && row.sublevel === group && row.section === section)}).map("id").uniq().value();
+  if (ids.length === 1) {
+    return ids[0];
+  }else{
+    return 0;
+  }
+}
 async function fetchWords4Audio(event) {
   // According to the level/group/section to get the id to fetch the words
+  let levelid = await fetchSectionID(event);
+  console.log("----- Data from fetchWords4Audio");
+  console.log(levelid);
 
   const transaction = eikenDB.transaction(['eikenWords'], 'readwrite');
   const objectStore = transaction.objectStore("eikenWords");
@@ -76,7 +95,7 @@ async function fetchWords4Audio(event) {
 
   console.log("Fetch words in the fetchWords4Audio");
   console.log(data);
-  let words = _(data).filter(row => { return (row.levelid === 1)} ).map(_v => _.pick(_v, ["id", "enword"])).sortBy(["id"]).value();
+  let words = _(data).filter(row => { return (row.levelid === levelid)} ).map(_v => _.pick(_v, ["id", "enword"])).sortBy(["id"]).value();
   // let words = _(data).filter(row => { return (row.levelid === 1)} ).value();
   console.log(words);
   return JSON.stringify(words); 
