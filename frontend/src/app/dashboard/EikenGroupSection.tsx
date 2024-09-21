@@ -24,10 +24,18 @@ export default (props) => {
 
   const { Countdown } = Statistic;
 
+  const onInputKeyUp = (event) => {
+    if(event.keyCode === 13){
+      console.log("Handle the return code from input");
+    }
+  };
+
   const inputProps = {
     placeholder: "Please input the heard word",
     ref: inputRef,
+    onKeyUp: onInputKeyUp,
   };
+
 
   const synth = window.speechSynthesis;
 
@@ -182,7 +190,7 @@ export default (props) => {
       <Flex justify='space-evenly' align='center'>
         <Input {...inputProps} />
       </Flex>
-      <Flex  justify='flex-end'>
+      <Flex justify='flex-end'>
         <Countdown title="Seconds" value={Date.now() + 60 * 1000} format="HH:mm:ss" onFinish={ () => {alert("Completed the count down")} } />
       </Flex>
     </Flex>
