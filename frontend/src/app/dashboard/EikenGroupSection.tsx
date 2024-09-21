@@ -1,8 +1,9 @@
 "use client";
 
 import { Select, Typography, Flex, Statistic, Checkbox, Button, Card, Progress, Input } from 'antd';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { CountdownProps } from 'antd';
+import type { InputRef } from 'antd';
 
 const cardStyle: React.CSSProperties = {
   width: 780,
@@ -19,7 +20,14 @@ export default (props) => {
   const [section , setSection ] = useState("");
   const [sections, setSections] = useState([]);
 
+  const inputRef = useRef<InputRef>(null);
+
   const { Countdown } = Statistic;
+
+  const inputProps = {
+    placeholder: "Please input the heard word",
+    ref: inputRef,
+  };
 
   const synth = window.speechSynthesis;
 
@@ -91,6 +99,9 @@ export default (props) => {
           SpeakEnglish("No available words for the specific section.");
           return;
         }
+
+        inputRef.current!.focus({ cursor: 'start' });
+
         let loop = setInterval(()=>{
           if(jsonData.length === 0) {
             SpeakEnglish("The test has completed. Please check the result.");
@@ -169,7 +180,7 @@ export default (props) => {
         <SkipAnswerProgress />
       </Flex>
       <Flex justify='space-evenly' align='center'>
-        <Input placeholder="Please input the words" />
+        <Input {...inputProps} />
       </Flex>
       <Flex  justify='flex-end'>
         <Countdown title="Seconds" value={Date.now() + 60 * 1000} format="HH:mm:ss" onFinish={ () => {alert("Completed the count down")} } />
