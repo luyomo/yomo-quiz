@@ -21,11 +21,26 @@ export default (props) => {
   const [sections, setSections] = useState([]);
 
   const inputRef = useRef<InputRef>(null);
+  let jsonWords = [];
 
   const { Countdown } = Statistic;
 
   const onInputKeyUp = (event) => {
     if(event.keyCode === 13){
+      let inputV = event.target.value; 
+      console.log("The input value:", inputV);
+      event.target.value = "";
+
+      if (jsonWords.length === 0) {
+        SpeakEnglish("The test has been completed. ");
+        event.target.disabled = true;
+        return;
+      }
+
+      let word = jsonWords.shift();
+      console.log(word);
+      SpeakEnglish(word.enword);
+
       console.log("Handle the return code from input");
     }
   };
@@ -101,25 +116,17 @@ export default (props) => {
       .then(response => response.text())
       .then(body => {
         console.log(`console output from function: ${body}`);
-        let jsonData = JSON.parse(body);
+        jsonWords = JSON.parse(body);
+
         console.log(body);
-        if (jsonData.length === 0) {
+        if (jsonWords.length === 0) {
           SpeakEnglish("No available words for the specific section.");
           return;
         }
-
         inputRef.current!.focus({ cursor: 'start' });
-
-        let loop = setInterval(()=>{
-          if(jsonData.length === 0) {
-            SpeakEnglish("The test has completed. Please check the result.");
-            clearInterval(loop);
-            return;
-          }
-          let word = jsonData.shift();
-          console.log(word);
-          SpeakEnglish(word.enword);
-        }, 2000)
+        let word = jsonWords.shift();
+        console.log(word);
+        SpeakEnglish(word.enword);
     });
   }
 
@@ -138,18 +145,6 @@ export default (props) => {
     speakText.onerror = e => {
       console.error("Something went wrong...");
     };
-
-    //Selected voice
-    // const selectedVoice = voiceSelect.selectedOptions[0].getAttribute("data-name");
-    //Loop through the voices
-    //    voices.forEach(voice => {
-    //      if (voice.name === selectedVoice) {
-    //        speakText.voice = voice;
-    //      }
-    //    });
-    //Set pitch and rate
-    //    speakText.rate = rate.value;
-    //    speakText.pitch = pitch.value;
 
     synth.speak(speakText);
   };
