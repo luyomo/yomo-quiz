@@ -11,6 +11,8 @@ const cardStyle: React.CSSProperties = {
   margin: 20,
 };
 
+let jsonWords = [];
+
 export default (props) => {
   const [mounted     , setMounted]   = useState(false);
 
@@ -20,16 +22,20 @@ export default (props) => {
   const [section , setSection ] = useState("");
   const [sections, setSections] = useState([]);
 
+  const [inputValue, setInputValue] = useState('');
+
+  const [numQues, setNumQues] = useState(1);
+  const [numQues2Do, setNumQues2Do] = useState(1);
+
   const inputRef = useRef<InputRef>(null);
-  let jsonWords = [];
 
   const { Countdown } = Statistic;
 
   const onInputKeyUp = (event) => {
     if(event.keyCode === 13){
-      let inputV = event.target.value; 
-      console.log("The input value:", inputV);
-      event.target.value = "";
+      let inputV = inputValue;
+      setInputValue("");
+      setNumQues2Do(jsonWords.length);
 
       if (jsonWords.length === 0) {
         SpeakEnglish("The test has been completed. ");
@@ -38,15 +44,14 @@ export default (props) => {
       }
 
       let word = jsonWords.shift();
-      console.log(word);
       SpeakEnglish(word.enword);
 
-      console.log("Handle the return code from input");
     }
   };
 
   const inputProps = {
     placeholder: "Please input the heard word",
+    defaultValut: "test",
     ref: inputRef,
     onKeyUp: onInputKeyUp,
   };
@@ -115,17 +120,20 @@ export default (props) => {
       .then(response => console.log(response.status) || response)
       .then(response => response.text())
       .then(body => {
-        console.log(`console output from function: ${body}`);
+        // console.log(`console output from function: ${body}`);
         jsonWords = JSON.parse(body);
 
-        console.log(body);
+        // console.log(body);
         if (jsonWords.length === 0) {
           SpeakEnglish("No available words for the specific section.");
           return;
         }
+        setNumQues(jsonWords.length);
+        setNumQues2Do(jsonWords.length);
         inputRef.current!.focus({ cursor: 'start' });
         let word = jsonWords.shift();
-        console.log(word);
+        // console.log(word);
+        // console.log(jsonWords);
         SpeakEnglish(word.enword);
     });
   }
@@ -179,11 +187,11 @@ export default (props) => {
         </Flex>
       </Flex>
       <Flex justify='space-evenly' align='center'>
-        <Progress type="circle" percent={100*18/20} format={percent => `完成率18/20` } />
+        <Progress type="circle" percent={100*(numQues-numQues2Do)/numQues} format={percent => `完成率${numQues-numQues2Do}/${numQues}` } />
         <SkipAnswerProgress />
       </Flex>
       <Flex justify='space-evenly' align='center'>
-        <Input {...inputProps} />
+        <Input {...inputProps} value={inputValue} onChange={ event => setInputValue(event.target.value) } />
       </Flex>
       <Flex justify='flex-end'>
         <Countdown title="Seconds" value={Date.now() + 60 * 1000} format="HH:mm:ss" onFinish={ () => {alert("Completed the count down")} } />
