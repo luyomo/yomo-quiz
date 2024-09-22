@@ -26,6 +26,7 @@ export default (props) => {
 
   const [inputValue, setInputValue] = useState('');
 
+  const [numQuesCor, setNumQuesCor] = useState(0);
   const [numQues, setNumQues] = useState(1);
   const [numQues2Do, setNumQues2Do] = useState(1);
 
@@ -46,6 +47,10 @@ export default (props) => {
 
       jsonDoneWords[jsonDoneWords.length-1]["answer"] = inputV;
       console.log(jsonDoneWords);
+
+      if (inputV.toLowerCase().trim() == jsonDoneWords[jsonDoneWords.length-1].enword.toLowerCase().trim() ){
+        setNumQuesCor(numQuesCor + 1);
+      }
 
       if (jsonWords.length === 0) {
         SpeakEnglish("The test has been completed. ");
@@ -119,7 +124,7 @@ export default (props) => {
 
   const SkipAnswerProgress = () => {
     if (!skipCheckAnswer) {
-      return (<Progress type="circle" percent={100*10/18} format={(percent) => '成功率10/18'} />)
+      return (<Progress type="circle" percent={100*numQuesCor/(numQues-numQues2Do)} format={(percent) => `成功率${numQuesCor}/${numQues-numQues2Do}`} />)
     } 
   }
 
