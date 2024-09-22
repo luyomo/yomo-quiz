@@ -12,6 +12,8 @@ const cardStyle: React.CSSProperties = {
 };
 
 let jsonWords = [];
+let jsonDoneWords = [];
+let timer = Date.now();
 
 export default (props) => {
   const [mounted     , setMounted]   = useState(false);
@@ -37,6 +39,14 @@ export default (props) => {
       setInputValue("");
       setNumQues2Do(jsonWords.length);
 
+      let tmpTimer = Date.now();
+      let timeTaken = Math.abs(tmpTimer - timer);
+      timer = tmpTimer;
+      jsonDoneWords[jsonDoneWords.length-1]["time_taken"] = timeTaken;
+
+      jsonDoneWords[jsonDoneWords.length-1]["answer"] = inputV;
+      console.log(jsonDoneWords);
+
       if (jsonWords.length === 0) {
         SpeakEnglish("The test has been completed. ");
         event.target.disabled = true;
@@ -44,14 +54,13 @@ export default (props) => {
       }
 
       let word = jsonWords.shift();
+      jsonDoneWords.push(word);
       SpeakEnglish(word.enword);
-
     }
   };
 
   const inputProps = {
     placeholder: "Please input the heard word",
-    defaultValut: "test",
     ref: inputRef,
     onKeyUp: onInputKeyUp,
   };
@@ -132,8 +141,8 @@ export default (props) => {
         setNumQues2Do(jsonWords.length);
         inputRef.current!.focus({ cursor: 'start' });
         let word = jsonWords.shift();
-        // console.log(word);
-        // console.log(jsonWords);
+        timer = Date.now();
+        jsonDoneWords.push(word)
         SpeakEnglish(word.enword);
     });
   }
