@@ -83,6 +83,47 @@ async function fetchSectionID(event) {
     return 0;
   }
 }
+
+async function saveCompleteTest(event){
+  let url = new URL(event.request.url);
+  let level = url.searchParams.get('level');
+  let group = url.searchParams.get('group');
+  let section = url.searchParams.get('section');
+
+  const jsonData = await event.request.json();
+  console.log(`received data from complete test. level: ${level} , group: ${group}, section: ${section} `);
+  console.log(jsonData);
+  let convertedJsonData;
+  try {
+    convertedJsonData = _(jsonData).map(row => {
+      if(row.answer.toLowerCase().trim() === row.enword.toLowerCase().trim()) {
+        row["isCorrect"] = true;
+        row["answerSpeed"] = row.time_taken/row.enword.length;
+      } else {
+        row["isCorrect"] = false;
+      }
+      return row;
+    }).value();
+
+    const transaction = eikenDB.transaction(['eikenHistory'], 'readwrite');
+    const objectStore = transaction.objectStore("eikenHistory");
+    objectStore.put({ "level": level, "sublevel": group, "section": section, "seq": 1, "data": convertedJsonData}, [level, group, section, 1]);
+    let searchData = await objectStore.get([level, group, section, 1]);
+    console.log("Fetched data from the compisite keys");
+    console.log(searchData);
+
+    const keyRangeValue = IDBKeyRange.bound(['level 2-1', 'A', '0'], ['level 2-1', 'A', '3']);
+
+    let idxRes = await objectStore.getAll(keyRangeValue);
+    console.log("Fetched the data from index");
+    console.log(idxRes);
+  } catch (err) {
+    console.log(err);
+  }
+  console.log(convertedJsonData);
+  return "Complete upload data"
+}
+
 async function fetchWords4Audio(event) {
   // According to the level/group/section to get the id to fetch the words
   let levelid = await fetchSectionID(event);
@@ -145,10 +186,14 @@ self.addEventListener('install', async event => {
  
   eikenDB = await idb.openDB(DBName, DBVersion, {
     upgrade(db, oldVersion, newVersion, transaction, event) {
-      event.target.result.createObjectStore('eikenHistory'  , { keypath: 'id' });
+      const eikenHistoryStore = event.target.result.createObjectStore('eikenHistory'  , { keypath: ["level", "sublevel", "section", "seq"] } );
+      eikenHistoryStore.createIndex('eikenHistoryIdx01', ["level", "sublevel", "section"], {unique: false});
+
       event.target.result.createObjectStore('eikenLevelInfo', { keypath: 'id' });
       event.target.result.createObjectStore('eikenWords'    , { keypath: 'id' });
       event.target.result.createObjectStore('userEikenLevel');
+
+
 
       event.target.result.createObjectStore('userInfo');
     },
@@ -168,6 +213,7 @@ self.addEventListener('install', async event => {
 
    const mapPostFunc = new Map();
    mapPostFunc["/example-backend/api/v1/user-info"]   =  postUserInfo;
+   mapPostFunc["/example-backend/api/v1/data/complete-test"]   =  saveCompleteTest;
    mapFunc["POST"] = mapPostFunc;
 });
 

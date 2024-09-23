@@ -53,8 +53,14 @@ export default (props) => {
       }
 
       if (jsonWords.length === 0) {
-        SpeakEnglish("The test has been completed. ");
+        SpeakEnglish("The test has been completed.");
         event.target.disabled = true;
+        fetch(`/example-backend/api/v1/data/complete-test?level=${props.level}&group=${group}&section=${section}`, {method: "POST", body:JSON.stringify(jsonDoneWords)})
+          .then(response => console.log(response.status) || response)
+          .then(response => response.text())
+          .then(body => {
+            console.log("Completed the data upload");
+           });
         return;
       }
 
