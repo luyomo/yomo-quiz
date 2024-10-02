@@ -29,7 +29,8 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useCookies             } from 'react-cookie';
 import EikenIcon from '../../../icons/EikenIcon.tsx';
 import { createStyles } from 'antd-style';
-import EikenAudio2Word  from './EikenGroupSection.tsx';
+import EikenAudio2Word       from './EikenGroupSection.tsx';
+import SciencePictorialPlant from './SciencePictorialPlant.tsx';
 
 
 const useStyle = createStyles(({ prefixCls, css }) => ({
@@ -74,15 +75,23 @@ export default () => {
 
   const EikenQuesType = () => {
     switch (pathname) {
-      case "/init-component":                             return <TopLevel            />
-      case "/eiken/index":                                return <EikenGrade          />
-      case "/eiken/ques-type":                            return <EikenCategory       />
+      case "/init-component":                             return <TopLevel                      />
+      case "/eiken/index":                                return <EikenGrade                    />
+      case "/eiken/ques-type":                            return <EikenCategory                 />
 
       case "/eiken/ques-type/audio2engWord":              return <EikenAudio2Word level={level} />
-      case "/eiken/ques-type/jp2engWord":                 return <EikenJP2Word        />
-      case "/eiken/ques-type/audio2engSentence":          return <EikenAudio2Sentence />
-      case "/eiken/ques-type/jp2engSentence":             return <EikenJP2Sentence    />
-      default:                                            return <TopLevel            />
+      case "/eiken/ques-type/jp2engWord":                 return <EikenJP2Word                  />
+      case "/eiken/ques-type/audio2engSentence":          return <EikenAudio2Sentence           />
+      case "/eiken/ques-type/jp2engSentence":             return <EikenJP2Sentence              />
+
+      // Science index
+      case "/science/index":                              return <ScienceIndex                  />
+
+      case "/science/pictorial":                          return <SciencePictorial              />
+
+      case "/science/pictorial/plant":                    return <SciencePictorialPlant         />
+
+      default:                                            return <TopLevel                      />
     }
   }
 
@@ -91,32 +100,18 @@ export default () => {
       <ConfigProvider button={{ className: styles.linearGradientButton }} >
           <Button size="large" icon={<AntDesignOutlined />} onClick={() => setPathname("/eiken/index") } >英検単語</Button>
           <Button size="large" onClick={() => alert(`Write English From JP`)} >JPREP</Button>
+          <Button size="large" onClick={() => setPathname("/science/index") }  >理      科</Button>
       </ConfigProvider>
     </Flex>)
 
   const EikenGrade = () => (
     <Flex vertical gap="large" style={{ width: '100%' }}>
       <ConfigProvider button={{ className: styles.linearGradientButton }} >
-          <Button size="large" icon={<AntDesignOutlined />} onClick={() => {
-            setLevel("level 1-2");
-            setPathname("/eiken/ques-type");}
-          } >一  級</Button>
-          <Button size="large" onClick={() => {
-            setLevel("level 1-1");
-            setPathname("/eiken/ques-type");}
-          } >準一級</Button>
-          <Button size="large" onClick={() => {
-            setLevel("level 2-2");
-            setPathname("/eiken/ques-type"); }
-          } >二  級</Button>
-          <Button size="large" onClick={() => {
-            setLevel("level 2-1");
-            setPathname("/eiken/ques-type");}
-          } >準二級</Button>
-          <Button size="large" onClick={() => {
-            setLevel("level 3");
-            setPathname("/eiken/ques-type");} 
-          } >三  級</Button>
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => { setLevel("level 1-2"); setPathname("/eiken/ques-type");} } >一  級</Button>
+          <Button size="large"                              onClick={() => { setLevel("level 1-1"); setPathname("/eiken/ques-type");} } >準一級</Button>
+          <Button size="large"                              onClick={() => { setLevel("level 2-2"); setPathname("/eiken/ques-type");} } >二  級</Button>
+          <Button size="large"                              onClick={() => { setLevel("level 2-1"); setPathname("/eiken/ques-type");} } >準二級</Button>
+          <Button size="large"                              onClick={() => { setLevel("level 3"  ); setPathname("/eiken/ques-type");} } >三  級</Button>
       </ConfigProvider>
     </Flex>)
 
@@ -134,6 +129,22 @@ export default () => {
   const EikenJP2Word        = () => ("Todo: Write English Words from JP");
   const EikenAudio2Sentence = () => ("Todo: Write English Sentence from Audio");
   const EikenJP2Sentence    = () => ("Todo: Write English Sentence from JP");
+
+  const ScienceIndex = () => (
+    <Flex vertical gap="large" style={{ width: '100%' }}>
+      <ConfigProvider button={{ className: styles.linearGradientButton }} >
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => { setPathname("/science/pictorial");} } >図鑑</Button>
+      </ConfigProvider>
+    </Flex>)
+
+  const SciencePictorial = () => (
+    <Flex vertical gap="large" style={{ width: '100%' }}>
+      <ConfigProvider button={{ className: styles.linearGradientButton }} >
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => { setPathname("/science/pictorial/plant");} } >植物</Button>
+      </ConfigProvider>
+    </Flex>)
+
+//  const SciencePictorialPlant = () => ("Todo: 図鑑 question here to do");
 
   return mounted && (
     <div id="test-pro-layout" style={{ height: '100vh' }} >
