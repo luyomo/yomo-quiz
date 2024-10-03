@@ -1,10 +1,12 @@
 "use client";
 
-import { Typography, Flex, Card, Radio, Space } from 'antd';
+import { Button, Typography, Flex, Card, Radio, Space, ConfigProvider, message } from 'antd';
 import { useState, useEffect } from 'react';
+import { createStyles } from 'antd-style';
 
 const { Paragraph } = Typography;
 import _ from 'lodash';
+
 
 const cardStyle: React.CSSProperties = {
   width: 780,
@@ -12,18 +14,38 @@ const cardStyle: React.CSSProperties = {
   margin: 10,
 };
 
-// let data = [
-//   {"question": "This is the first question", "answer_01": "answer 1A", "answer_02": "answer 1B", "answer_03": "answer 1C", "answer_04": "answer 1D", "correct_answer": "Correct answer", "answer": 0},
-//   {"question": "This is the second question", "answer_01": "answer 2A", "answer_02": "answer 2B", "answer_03": "answer 2C", "answer_04": "answer 2D", "correct_answer": "Correct answer", "answer": 0},
-//   {"question": "This is the third question", "answer_01": "answer 3A", "answer_02": "answer 3B", "answer_03": "answer 3C", "answer_04": "answer 3D", "correct_answer": "Correct answer", "answer": 0},
-//   {"question": "This is the forth question", "answer_01": "answer 4A", "answer_02": "answer 4B", "answer_03": "answer 4C", "answer_04": "answer 4D", "correct_answer": "Correct answer", "answer": 0},
-//   {"question": "This is the fifth question", "answer_01": "answer 5A", "answer_02": "answer 5B", "answer_03": "answer 5C", "answer_04": "answer 5D", "correct_answer": "Correct answer", "answer": 0},
-// ];
+const useStyle = createStyles(({ prefixCls, css }) => ({
+  linearGradientButton: css`
+    &.${prefixCls}-btn-primary:not([disabled]):not(.${prefixCls}-btn-dangerous) {
+      border-width: 0;
+
+      > span {
+        position: relative;
+      }
+
+      &::before {
+        content: '';
+        background: linear-gradient(135deg, #6253e1, #04befe);
+        position: absolute;
+        inset: 0;
+        opacity: 1;
+        transition: all 0.3s;
+        border-radius: inherit;
+      }
+
+      &:hover::before {
+        opacity: 0;
+      }
+    }
+  `,
+}));
 
 export default (props) => {
-  const [value, setValue]   = useState([]);
+//   const [value, setValue]   = useState([]);
   const [data, setData]   = useState([]);
   const [mounted     , setMounted]   = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
+  const { styles } = useStyle();
 
   useEffect(() => { 
     setMounted(true);
@@ -59,8 +81,21 @@ export default (props) => {
     setData(theData);
   };
 
+  const onSubmit = () => {
+    let toDoList = _.filter(data, function(row) { return !row.answer; });
+    if(toDoList.length > 0){
+      messageApi.open({
+        type: 'warning',
+        content: 'Please complete all the questions.',
+      });
+    }
+    console.log("Starting to check the data.");
+    console.log(toDoList);
+  };
+
   return mounted && (
     <div>
+      {contextHolder}
       {data.map(function(object, i){
         return (
       <Flex key={i+11} vertical='vertical' justify='space-evenly' gap={ 50 } >
@@ -79,6 +114,11 @@ export default (props) => {
       </Flex>
       )
       })}
+      <Flex vertical gap="large" style={{ width: '100%' }}>
+        <ConfigProvider button={{ className: styles.linearGradientButton }} >
+          <Button size="large" onClick={onSubmit} >Submit</Button>
+        </ConfigProvider >
+      </Flex>
     </div>
   );
 };
