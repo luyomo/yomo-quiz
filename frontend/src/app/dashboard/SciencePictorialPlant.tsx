@@ -104,8 +104,12 @@ export default (props) => {
       });
   };
 
-  const onNext = () => {
-    fetch(`/example-backend/api/v1/science/pictorial/plant?` + new URLSearchParams({user: cookies.user_email}).toString())
+  const onNextNew = () => { onNext("new", "No new questions are available."); };
+  const onNextFailure = () => { onNext("failure", "No failure questions are available."); };
+
+  const onNext = (theType, message) => {
+    fetch(`/example-backend/api/v1/science/pictorial/plant?` + new URLSearchParams({
+         user: cookies.user_email, type: theType}).toString())
       .then(response => console.log(response.status) || response)
       .then(response => response.text())
       .then(body => {
@@ -134,7 +138,7 @@ export default (props) => {
         if(convertedJsonData.length === 0){
           messageApi.open({
             type: 'info',
-            content: 'No new questions are available.',
+            content: message,
           });
         }
 
@@ -147,7 +151,8 @@ export default (props) => {
       {contextHolder}
       <Flex vertical gap="large" style={{ width: '100%' }}>
         <ConfigProvider button={{ className: styles.linearGradientButton }} >
-          <Button size="large" onClick={onNext} >Next 10</Button>
+          <Button size="large" onClick={onNextNew} >Next 10 New Questions</Button>
+          <Button size="large" onClick={onNextFailure} >Next 10 Failed Questions</Button>
         </ConfigProvider >
       </Flex>
       {data.map(function(object, i){

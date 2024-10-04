@@ -26,8 +26,17 @@ func main() {
 
   r.GET("/api/v1/science/pictorial/plant", func(c *gin.Context) {
     user := c.Query("user")
-    retData := fetchSciencePictorialPlant(&user)
-    c.String(http.StatusOK, string(retData))
+    dataType := c.Query("type")
+    switch dataType {
+      case "new":
+        retData := fetchSciencePictorialPlantNew(&user)
+        c.String(http.StatusOK, string(retData))
+      case "failure":
+        retData :=  fetchSciencePictorialPlantFailure(&user)
+        c.String(http.StatusOK, string(retData))
+      default:
+        fmt.Printf("Unsupported type: %s \n", dataType)
+    }
   })
 
   r.POST("/api/v1/science/pictorial/plant", func(c *gin.Context) {
@@ -155,10 +164,15 @@ type PostSciencePictorialPlant struct {
     SciencePictorialPlant []SciencePictorialPlant  `json:"data"`
 }
 
-func fetchSciencePictorialPlant(user *string) []byte {
+func fetchSciencePictorialPlantNew(user *string) []byte {
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' right join science_choice_qa t3 on t2.question_id = t3.sequence where t2.question_id is null order by t3.sequence limit 5`, *user))
+}
 
-  fmt.Printf("The user is %#v \n", *user);
+func fetchSciencePictorialPlantFailure(user *string) []byte {
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join science_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id limit 5`, *user))
+}
 
+func fetchSciencePictorialPlant(query string) []byte {
   db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
   if err != nil {
     panic(err)
@@ -170,7 +184,7 @@ func fetchSciencePictorialPlant(user *string) []byte {
 
    var arrData []SciencePictorialPlant
 
-   rows, err := db.Query(fmt.Sprintf(`select t3.* from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' right join science_choice_qa t3 on t2.question_id = t3.sequence where t2.question_id is null order by t3.sequence limit 5`, *user))
+   rows, err := db.Query(query) 
 
    checkErr(err)
    for rows.Next() {
