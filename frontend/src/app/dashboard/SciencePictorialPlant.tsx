@@ -42,7 +42,6 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
 }));
 
 export default (props) => {
-//   const [value, setValue]   = useState([]);
   const [data, setData]   = useState([]);
   const [mounted     , setMounted]   = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
@@ -56,23 +55,26 @@ export default (props) => {
       .then(response => response.text())
       .then(body => {
         let jsonData = JSON.parse(body);
-        console.log("------------------------");
-        console.log(jsonData);
-        let testData = _(jsonData).map(row => {
+        let convertedJsonData = _(jsonData).map(row => {
           let ret = {};
-          ret["question"] = row["question"];
-          ret["correct_answer"] = row["correct_answer"];
-          ret["answer"] = 0;
 
-          ret["answers"] = [];
+          ret["question"]       = row["question"];
+          ret["correct_answer"] = row["correct_answer"];
+          ret["answer"]         = 0;                       // Set the answer as 0 in order not to select the radio item initially
+
+          // Pull one column from answers and push to the answer to random the answer every time.
+          // It does not matter how you change the sequence of the answer if the correct_answer column is there to be used to determine
+          // user's result
+          // ex: ["A", "B", "C"] -> ["B", "A", "C"] randomly
+          ret["answers"]        = [];
           let num = row["answers"].length;
           for (let idx=0; idx < num; idx++) {
             ret["answers"].push( _(row["answers"]).pullAt(_.random(0, row["answers"].length -1) ).first() ); 
           }
+
           return ret;
         }).value();
-        console.log(testData);
-        setData(testData);
+        setData(convertedJsonData);
       });
    }, [])
 
