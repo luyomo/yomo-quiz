@@ -8,6 +8,7 @@ import { CorrectIcon, WrongIcon} from '../../../icons/Icons.tsx';
 const { Paragraph } = Typography;
 import _ from 'lodash';
 
+import { useCookies             } from 'react-cookie';
 
 const cardStyle: React.CSSProperties = {
   width: 780,
@@ -46,36 +47,11 @@ export default (props) => {
   const [mounted     , setMounted]   = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const { styles } = useStyle();
+  const [cookies, setCookie] = useCookies([]);
 
   useEffect(() => { 
     setMounted(true);
 
-    fetch(`/example-backend/api/v1/science/pictorial/plant`)
-      .then(response => console.log(response.status) || response)
-      .then(response => response.text())
-      .then(body => {
-        let jsonData = JSON.parse(body);
-        let convertedJsonData = _(jsonData).map(row => {
-          let ret = {};
-
-          ret["question"]       = row["question"];
-          ret["correct_answer"] = row["correct_answer"];
-          ret["answer"]         = 0;                       // Set the answer as 0 in order not to select the radio item initially
-
-          // Pull one column from answers and push to the answer to random the answer every time.
-          // It does not matter how you change the sequence of the answer if the correct_answer column is there to be used to determine
-          // user's result
-          // ex: ["A", "B", "C"] -> ["B", "A", "C"] randomly
-          ret["answers"]        = [];
-          let num = row["answers"].length;
-          for (let idx=0; idx < num; idx++) {
-            ret["answers"].push( _(row["answers"]).pullAt(_.random(0, row["answers"].length -1) ).first() ); 
-          }
-
-          return ret;
-        }).value();
-        setData(convertedJsonData);
-      });
    }, [])
 
   const onRadioChange = (event: RadioChangeEvent) => {
@@ -118,11 +94,62 @@ export default (props) => {
 
     // Render the GUI
     setData(jsonData);
+
+    
+    fetch(`/example-backend/api/v1/science/pictorial/plant`, {method: "POST", body: JSON.stringify({user: cookies.user_email, data: jsonData})} )
+      .then(response => console.log(response.status) || response)
+      .then(response => response.text())
+      .then(body => {
+        console.log(body);
+      });
+  };
+
+  const onNext = () => {
+    fetch(`/example-backend/api/v1/science/pictorial/plant?` + new URLSearchParams({user: cookies.user_email}).toString())
+      .then(response => console.log(response.status) || response)
+      .then(response => response.text())
+      .then(body => {
+        let jsonData = JSON.parse(body);
+        let convertedJsonData = _(jsonData).map(row => {
+          let ret = {};
+
+          ret["question"]       = row["question"];
+          ret["sequence"]       = row["sequence"];
+          ret["correct_answer"] = row["correct_answer"];
+          ret["answer"]         = 0;                       // Set the answer as 0 in order not to select the radio item initially
+
+          // Pull one column from answers and push to the answer to random the answer every time.
+          // It does not matter how you change the sequence of the answer if the correct_answer column is there to be used to determine
+          // user's result
+          // ex: ["A", "B", "C"] -> ["B", "A", "C"] randomly
+          ret["answers"]        = [];
+          let num = row["answers"].length;
+          for (let idx=0; idx < num; idx++) {
+            ret["answers"].push( _(row["answers"]).pullAt(_.random(0, row["answers"].length -1) ).first() ); 
+          }
+
+          return ret;
+        }).value();
+
+        if(convertedJsonData.length === 0){
+          messageApi.open({
+            type: 'info',
+            content: 'No new questions are available.',
+          });
+        }
+
+        setData(convertedJsonData);
+      });
   };
 
   return mounted && (
     <div>
       {contextHolder}
+      <Flex vertical gap="large" style={{ width: '100%' }}>
+        <ConfigProvider button={{ className: styles.linearGradientButton }} >
+          <Button size="large" onClick={onNext} >Next 10</Button>
+        </ConfigProvider >
+      </Flex>
       {data.map(function(object, i){
         return (
       <Flex key={i+11} vertical='vertical' justify='space-evenly' gap={ 50 } >
@@ -151,11 +178,17 @@ export default (props) => {
       </Flex>
       )
       })}
-      <Flex vertical gap="large" style={{ width: '100%' }}>
-        <ConfigProvider button={{ className: styles.linearGradientButton }} >
-          <Button size="large" onClick={onSubmit} >Submit</Button>
-        </ConfigProvider >
-      </Flex>
+      { (() => { 
+        if (data.length > 0) {
+          return(
+            <Flex vertical gap="large" style={{ width: '100%' }}>
+              <ConfigProvider button={{ className: styles.linearGradientButton }} >
+                <Button size="large" onClick={onSubmit} >Submit</Button>
+              </ConfigProvider >
+            </Flex>
+          )}
+        })()
+      }
     </div>
   );
 };
