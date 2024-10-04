@@ -27,7 +27,7 @@ import { Button, Space, ConfigProvider, Form, Select, Input,
          message, Flex, Statistic } from 'antd';
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useCookies             } from 'react-cookie';
-import EikenIcon from '../../../icons/EikenIcon.tsx';
+import { EikenIcon} from '../../../icons/Icons.tsx';
 import { createStyles } from 'antd-style';
 import EikenAudio2Word       from './EikenGroupSection.tsx';
 import SciencePictorialPlant from './SciencePictorialPlant.tsx';

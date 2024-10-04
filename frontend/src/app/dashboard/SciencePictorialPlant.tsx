@@ -3,6 +3,7 @@
 import { Button, Typography, Flex, Card, Radio, Space, ConfigProvider, message } from 'antd';
 import { useState, useEffect } from 'react';
 import { createStyles } from 'antd-style';
+import { CorrectIcon, WrongIcon} from '../../../icons/Icons.tsx';
 
 const { Paragraph } = Typography;
 import _ from 'lodash';
@@ -76,21 +77,45 @@ export default (props) => {
    }, [])
 
   const onRadioChange = (event: RadioChangeEvent) => {
-    let theData = JSON.parse(JSON.stringify(data));  // deep copy
+    // If the setState target is one object, the value is kept as pointer. Changing contents does not trigger the render, 
+    // so the cloneDeep is required to change the object pointer.
+    let theData = _.cloneDeep(data);
     theData[event.target.name].answer = event.target.value;
     setData(theData);
   };
 
   const onSubmit = () => {
+    // If not all the questions are filled in, the submit is not allowed. 
     let toDoList = _.filter(data, function(row) { return !row.answer; });
     if(toDoList.length > 0){
       messageApi.open({
         type: 'warning',
         content: 'Please complete all the questions.',
       });
+      return;
     }
-    console.log("Starting to check the data.");
-    console.log(toDoList);
+
+    // According to the choice result, set the is_correct value of the object to show the correct/wrong icon. 
+    // Data example as below:
+    // {
+    //   answer: 2,                                                   # the choice like 1,2,3...
+    //   answers: ["Choice 01", "Choice 02", "Choice 03" ...], 
+    //   correct_answer: "Choice 02",
+    //   question: "This is the example question",
+    //   is_correct: 1,                                               # This item will be added after the below logic. 
+    //                                                                # 1: correct, 2: wrong, else: no icon display
+    // }
+    let jsonData = _(data).map(row => {
+      if (row["correct_answer"] == row["answers"][row["answer"] - 1]) {
+        row["is_correct"] = 1; 
+      } else {
+        row["is_correct"] = 2; 
+      }
+      return row;
+    }).value(); 
+
+    // Render the GUI
+    setData(jsonData);
   };
 
   return mounted && (
@@ -100,8 +125,18 @@ export default (props) => {
         return (
       <Flex key={i+11} vertical='vertical' justify='space-evenly' gap={ 50 } >
         <Card key={i+21} hoverable style={cardStyle} styles={{ body: { padding: 20, overflow: 'hidden' } }}>
-            <Typography> Q{String(i+1).padStart(2, '0')}: {object.question}
-            </Typography>
+            <Typography> { (() => {
+              switch (object['is_correct']) { 
+                case 1: 
+                  return <CorrectIcon />; 
+                  break; 
+                case 2: return <WrongIcon />; 
+                  break; 
+                default: return null; 
+              }
+              })()
+            } Q{String(i+1).padStart(2, '0')}: {object.question}
+            </Typography> 
             <Radio.Group key={i+31} name={i} onChange={onRadioChange} value={object.answer}>
               <Space direction="vertical">
                 { object.answers.map(function(answer, idx){

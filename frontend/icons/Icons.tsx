@@ -2,6 +2,7 @@ import Icon from '@ant-design/icons';
 
 import type { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon';
 
+
 const EikenSvg = () => (
 <svg width="100%" height="100%" viewBox="0 0 547 466" version="1.1" >
     <g transform="matrix(1,0,0,1.07163,0,-41.8323)">
@@ -16,4 +17,23 @@ const EikenSvg = () => (
 
 const EikenIcon = (props: Partial<CustomIconComponentProps>) => ( <Icon component={EikenSvg} {...props} />);
 
-export default EikenIcon;
+
+const CorrectSvg = () => (
+<svg width="32" height="32" viewBox="0 0 1024 1024"><path fill="#3be8b4" d="M880 112H144c-17.7 0-32 14.3-32 32v736c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V144c0-17.7-14.3-32-32-32M695.5 365.7l-210.6 292a31.8 31.8 0 0 1-51.7 0L308.5 484.9c-3.8-5.3 0-12.7 6.5-12.7h46.9c10.2 0 19.9 4.9 25.9 13.3l71.2 98.8l157.2-218c6-8.3 15.6-13.3 25.9-13.3H689c6.5 0 10.3 7.4 6.5 12.7"/></svg>
+);
+
+const CorrectIcon = (props: Partial<CustomIconComponentProps>) => ( <Icon component={CorrectSvg} {...props} />);
+
+
+const WrongSvg = () => (
+<svg width="32" height="32" viewBox="0 0 1024 1024"><path fill="#fb3264" d="M880 112H144c-17.7 0-32 14.3-32 32v736c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V144c0-17.7-14.3-32-32-32m-40 728H184V184h656z"/><path fill="#fb3264" fillOpacity="0.15" d="M184 840h656V184H184zm163.9-473.9A7.95 7.95 0 0 1 354 353h58.9c4.7 0 9.2 2.1 12.3 5.7L512 462.2l86.8-103.5c3-3.6 7.5-5.7 12.3-5.7H670c6.8 0 10.5 7.9 6.1 13.1L553.8 512l122.3 145.9c4.4 5.2.7 13.1-6.1 13.1h-58.9c-4.7 0-9.2-2.1-12.3-5.7L512 561.8l-86.8 103.5c-3 3.6-7.5 5.7-12.3 5.7H354c-6.8 0-10.5-7.9-6.1-13.1L470.2 512z"/><path fill="#fb3264" d="M354 671h58.9c4.8 0 9.3-2.1 12.3-5.7L512 561.8l86.8 103.5c3.1 3.6 7.6 5.7 12.3 5.7H670c6.8 0 10.5-7.9 6.1-13.1L553.8 512l122.3-145.9c4.4-5.2.7-13.1-6.1-13.1h-58.9c-4.8 0-9.3 2.1-12.3 5.7L512 462.2l-86.8-103.5c-3.1-3.6-7.6-5.7-12.3-5.7H354c-6.8 0-10.5 7.9-6.1 13.1L470.2 512L347.9 657.9A7.95 7.95 0 0 0 354 671"/></svg>
+);
+
+const WrongIcon = (props: Partial<CustomIconComponentProps>) => ( <Icon component={WrongSvg} {...props} />);
+
+// export default WrongIcon;
+
+// export default EikenIcon;
+// export default CorrectIcon;
+
+export { WrongIcon,  EikenIcon,  CorrectIcon};
