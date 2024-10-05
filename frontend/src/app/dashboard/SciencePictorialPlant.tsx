@@ -48,6 +48,7 @@ const useStyle = createStyles(({ prefixCls, css }) => ({
 
 export default (props) => {
   const [data, setData]   = useState([]);
+  const [progress, setProgress]   = useState("init");
   const [mounted     , setMounted]   = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const { styles } = useStyle();
@@ -100,6 +101,7 @@ export default (props) => {
 
     // Render the GUI
     setData(jsonData);
+    setProgress("completed");
 
     
     fetch(`/example-backend/api/v1/science/pictorial/plant`, {method: "POST", body: JSON.stringify({user: cookies.user_email, data: jsonData})} )
@@ -138,6 +140,8 @@ export default (props) => {
             ret["answers"].push( _(row["answers"]).pullAt(_.random(0, row["answers"].length -1) ).first() ); 
           }
 
+          setProgress("started");
+
           return ret;
         }).value();
 
@@ -175,7 +179,7 @@ export default (props) => {
                 default: return null; 
               }
               })()
-            }  Q{String(i+1).padStart(2, '0')}: {object.question}    <a id="link" href="#" onClick={ (e) => {e.preventDefault(); SpeakJapanese(object.question);} }><PlayCircleOutlined /></a> 
+            }  Q{String(i+1).padStart(2, '0')}: {object.question}    <a id="link" href="#" onClick={ (e) => {e.preventDefault(); SpeakJapanese(object.question);} }><PlayCircleOutlined /></a> {(() => { return (progress === "completed" && object['is_correct'] !== 1) ? (<span style={{ color: 'red' }} >正解：{object.correct_answer}</span>) : '' })()} 
             </Typography> 
             <Radio.Group key={i+31} name={i} onChange={onRadioChange} value={object.answer}>
               <Space direction="vertical">
@@ -195,7 +199,7 @@ export default (props) => {
           return(
             <Flex vertical gap="large" style={{ width: '100%' }}>
               <ConfigProvider button={{ className: styles.linearGradientButton }} >
-                <Button size="large" onClick={onSubmit} >Submit</Button>
+                <Button size="large" onClick={onSubmit} disabled={(() => { return (progress === "started") ? false : true })()} >Submit</Button>
               </ConfigProvider >
             </Flex>
           )}
