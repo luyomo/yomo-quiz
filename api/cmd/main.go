@@ -165,7 +165,7 @@ type PostSciencePictorialPlant struct {
 }
 
 func fetchSciencePictorialPlantNew(user *string) []byte {
-   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' right join science_choice_qa t3 on t2.question_id = t3.sequence where t2.question_id is null order by t3.sequence limit 5`, *user))
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join science_choice_qa t3 on t2.question_id = t3.sequence where t2.question_id is null order by t3.sequence limit 5`, *user))
 }
 
 func fetchSciencePictorialPlantFailure(user *string) []byte {
@@ -250,7 +250,13 @@ func postSciencePictorialPlant(reqData PostSciencePictorialPlant) error  {
     }else {
       isCorrect = false
     }
-    _, err := tx.Exec(queryString, testId, idx, row.Sequence, row.Answers[row.Answer - 1], isCorrect, 0)
+
+    var err error
+    if row.Answer == 9 {
+        _, err = tx.Exec(queryString, testId, idx, row.Sequence, "Unknow question", isCorrect, 0)
+    } else {
+        _, err = tx.Exec(queryString, testId, idx, row.Sequence, row.Answers[row.Answer - 1], isCorrect, 0)
+    }
 
     if err != nil {
        fmt.Printf("Failed to insert data: %#v \n", err)

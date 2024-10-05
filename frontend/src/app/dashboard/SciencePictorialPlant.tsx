@@ -84,7 +84,9 @@ export default (props) => {
     //                                                                # 1: correct, 2: wrong, else: no icon display
     // }
     let jsonData = _(data).map(row => {
-      if (row["correct_answer"] == row["answers"][row["answer"] - 1]) {
+      if (row["answer"] === 9) {  // [わからない]
+        row["is_correct"] = 2; 
+      }else if(row["correct_answer"] == row["answers"][row["answer"] - 1]) {
         row["is_correct"] = 1; 
       } else {
         row["is_correct"] = 2; 
@@ -177,6 +179,7 @@ export default (props) => {
                     return (<Radio value={idx+1} key={i*100+idx+1}>{answer}</Radio>)
                   })
                 }
+                <Radio value={9} key={i*100+9+1}>わからない</Radio>
               </Space>
             </Radio.Group>
         </Card>
