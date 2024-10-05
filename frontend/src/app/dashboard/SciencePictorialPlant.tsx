@@ -4,6 +4,10 @@ import { Button, Typography, Flex, Card, Radio, Space, ConfigProvider, message }
 import { useState, useEffect } from 'react';
 import { createStyles } from 'antd-style';
 import { CorrectIcon, WrongIcon} from '../../../icons/Icons.tsx';
+import { PlayCircleOutlined } from '@ant-design/icons';
+
+import { SpeakJapanese } from './Utils.tsx';
+
 
 const { Paragraph } = Typography;
 import _ from 'lodash';
@@ -171,12 +175,12 @@ export default (props) => {
                 default: return null; 
               }
               })()
-            } Q{String(i+1).padStart(2, '0')}: {object.question}
+            }  Q{String(i+1).padStart(2, '0')}: {object.question}    <a id="link" href="#" onClick={ (e) => {e.preventDefault(); SpeakJapanese(object.question);} }><PlayCircleOutlined /></a> 
             </Typography> 
             <Radio.Group key={i+31} name={i} onChange={onRadioChange} value={object.answer}>
               <Space direction="vertical">
                 { object.answers.map(function(answer, idx){
-                    return (<Radio value={idx+1} key={i*100+idx+1}>{answer}</Radio>)
+                    return (<Radio value={idx+1} key={i*100+idx+1}>{answer}       <a id="link" href="#" onClick={ (e) => {e.preventDefault(); SpeakJapanese(answer);} }><PlayCircleOutlined /></a> </Radio>)
                   })
                 }
                 <Radio value={9} key={i*100+9+1}>わからない</Radio>
