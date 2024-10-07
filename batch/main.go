@@ -5,13 +5,16 @@ import (
   "time"
   "fmt"
   "os"
-  "encoding/json"
+  //"encoding/json"
 //  "encoding/gob"
 //  "bytes"
+  //"io/ioutil"
   "strings"
+  //"net/http"
   // "io"
   // "encoding/json"
 
+  g "github.com/serpapi/google-search-results-golang"
   "database/sql"
   _ "github.com/go-sql-driver/mysql"
 )
@@ -19,6 +22,12 @@ import (
 func main() {
 
     // Fetch Json data from serpapi
+
+    serp_api := os.Getenv("SERP_API_KEY")
+    if serp_api == "" {
+      fmt.Println("Please fill in the valid serp api key")
+      return 
+    }
 
     urlData, err := fetchSciencePic()
     if err != nil {
@@ -28,9 +37,39 @@ func main() {
     for _, qa := range urlData {
       fmt.Printf("---------- data from db: %#v \n", qa)
 
-      dat, err := os.ReadFile("serpapi.json")
-      checkErr(err)
-      arrUrls := parseJson2Urls(dat)
+      parameter := map[string]string{
+        "engine": "google_images",
+        "q": qa.Question,
+        "location": "Japan",
+      }
+
+      search := g.NewGoogleSearch(parameter, serp_api)
+      results, err := search.GetJSON()
+      if err != nil {
+        panic(err)
+      }
+
+
+      // requestURL := fmt.Sprintf("https://serpapi.com/search?engine=google_images&q=%s&api_key=%s", qa.Question, serp_api)
+      // fmt.Printf("url: %s \n", requestURL)
+      // res, err := http.Get(requestURL)
+      // if err != nil {
+      //   fmt.Printf("error making http request: %s\n", err)
+      //   os.Exit(1)
+      // }
+
+      // fmt.Printf("client: status code: %d\n", res.StatusCode)
+
+      // resBody, err := ioutil.ReadAll(res.Body)
+      // if err != nil {
+      //     fmt.Printf("client: could not read response body: %s\n", err)
+      //     os.Exit(1)
+      // }
+
+
+//      dat, err := os.ReadFile("serpapi.json")
+//      checkErr(err)
+      arrUrls := parseJson2Urls(results)
       fmt.Printf("The urls: %#v \n", arrUrls)
 
       updatePictorialUrl(qa.Sequence, arrUrls)
@@ -51,14 +90,8 @@ func checkErr(err error) {
 }
 
 
-func parseJson2Urls(byteData []byte) []string {
+func parseJson2Urls(jsonData g.SearchResult) []string {
   var arrUrls []string
-  var jsonData map[string]interface{}
-
-  if err := json.Unmarshal(byteData, &jsonData); err != nil {
-    fmt.Println(err)
-  }
-//  fmt.Printf("json data: %#v \n", jsonData["images_results"])
   imagesRes := jsonData["images_results"].([]interface{})
   for _, entry := range imagesRes {
     image := entry.(map[string]interface{})
@@ -114,10 +147,6 @@ func updatePictorialUrl(seq int, data []string) error  {
 
   strData := fmt.Sprintf("[\"%s\"]", strings.Join(data, "\",\""))
   fmt.Printf("string data: %s \n", strData)
-//  buf := &bytes.Buffer{}
-//  gob.NewEncoder(buf).Encode(data)
-//  bs := buf.Bytes()
-//  fmt.Printf("------> %q", bs)
 
   tx, err := db.Begin()
 

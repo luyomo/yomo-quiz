@@ -166,7 +166,8 @@ export default (props) => {
         // Set the value here
         console.log("The url is:");
         console.log(urls[0]);
-        setImage(urls[RandomInt(urls.length)]);
+        // setImage(urls[RandomInt(urls.length)]);
+        setImage(urls[RandomInt(20)]);
 
         timer = Date.now();
         jsonDoneQa.push(qa)
