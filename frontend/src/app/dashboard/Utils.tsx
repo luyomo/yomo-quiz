@@ -35,4 +35,8 @@ const SpeakJapanese = (inputText) => {
   }
 };
 
-export { SpeakEnglish, SpeakJapanese };
+const RandomInt = (maxInt) => {
+  return Math.floor(Math.random() * maxInt);
+}
+
+export { SpeakEnglish, SpeakJapanese, RandomInt };

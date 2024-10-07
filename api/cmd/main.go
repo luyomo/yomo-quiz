@@ -39,6 +39,24 @@ func main() {
     }
   })
 
+  r.GET("/api/v1/science/pictorial/pic-read", func(c *gin.Context) {
+    user := c.Query("user")
+    dataType := c.Query("type")
+    switch dataType {
+      case "new":
+//        retData := fetchSciencePictorialPlantNew(&user)
+//        c.String(http.StatusOK, string(retData))
+      case "failure":
+//        retData :=  fetchSciencePictorialPlantFailure(&user)
+//        c.String(http.StatusOK, string(retData))
+      default:
+        retData := fetchSciencePic(user)
+        c.String(http.StatusOK, string(retData))
+//        fmt.Printf("Unsupported type: %s \n", dataType)
+    }
+  })
+ 
+
   r.POST("/api/v1/science/pictorial/plant", func(c *gin.Context) {
     byteData, err := io.ReadAll(c.Request.Body)
     if err != nil {
@@ -269,4 +287,44 @@ func postSciencePictorialPlant(reqData PostSciencePictorialPlant) error  {
   fmt.Printf("Response data: %#v \n", testId)
   tx.Commit()
   return nil
+}
+
+
+type SciencePic struct {
+  Sequence int    `json:"sequence"`
+  Question string `json:"question"`
+  Category string `json:"category"`
+  Urls     string `json:"urls"`
+}
+
+func fetchSciencePic(user string) []byte {
+  db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
+  if err != nil {
+    panic(err)
+  }
+  // See "Important settings" section.
+  db.SetConnMaxLifetime(time.Minute * 3)
+  db.SetMaxOpenConns(10)
+  db.SetMaxIdleConns(10)
+
+  var arrData []SciencePic 
+
+  rows, err := db.Query("select sequence, question, category, urls from science_pictorial_qa") 
+
+  checkErr(err)
+  for rows.Next() {
+    var row SciencePic
+
+    err = rows.Scan(&row.Sequence, &row.Question, &row.Category, &row.Urls)
+    checkErr(err)
+
+    arrData = append(arrData, row)
+  }
+
+  bytesData, err := json.Marshal(arrData)
+  if err != nil {
+    panic(err)
+  }
+  db.Close()
+  return bytesData
 }

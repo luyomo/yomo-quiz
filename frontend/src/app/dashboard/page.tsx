@@ -31,6 +31,7 @@ import { EikenIcon} from '../../../icons/Icons.tsx';
 import { createStyles } from 'antd-style';
 import EikenAudio2Word       from './EikenGroupSection.tsx';
 import SciencePictorialPlant from './SciencePictorialPlant.tsx';
+import SciencePictorialRead from './SciencePictorialRead.tsx';
 
 
 const useStyle = createStyles(({ prefixCls, css }) => ({
@@ -90,6 +91,7 @@ export default () => {
       case "/science/pictorial":                          return <SciencePictorial              />
 
       case "/science/pictorial/plant":                    return <SciencePictorialPlant         />
+      case "/science/pictorial/pic-read":                 return <SciencePictorialRead          />
 
       default:                                            return <TopLevel                      />
     }
@@ -141,6 +143,7 @@ export default () => {
     <Flex vertical gap="large" style={{ width: '100%' }}>
       <ConfigProvider button={{ className: styles.linearGradientButton }} >
           <Button size="large" icon={<AntDesignOutlined />} onClick={() => { setPathname("/science/pictorial/plant");} } >植物</Button>
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => { setPathname("/science/pictorial/pic-read");} } >図鑑識別</Button>
       </ConfigProvider>
     </Flex>)
 
