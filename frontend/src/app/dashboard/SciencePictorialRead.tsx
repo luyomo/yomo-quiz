@@ -41,21 +41,20 @@ export default (props) => {
     if(event.keyCode === 13){
       let inputV = inputValue;
       setInputValue("");
-      setNumQues2Do(jsonWords.length);
+      setNumQues2Do(jsonQa.length);
 
       let tmpTimer = Date.now();
       let timeTaken = Math.abs(tmpTimer - timer);
       timer = tmpTimer;
       jsonDoneQa[jsonDoneQa.length-1]["time_taken"] = timeTaken;
 
-//      jsonDoneQa[jsonDoneWords.length-1]["answer"] = inputV;
-//      console.log(jsonDoneWords);
-//
-//      if (inputV.toLowerCase().trim() == jsonDoneWords[jsonDoneWords.length-1].enword.toLowerCase().trim() ){
-//        setNumQuesCor(numQuesCor + 1);
-//      }
-//
-//      if (jsonWords.length === 0) {
+      jsonDoneQa[jsonDoneQa.length-1]["answer"] = inputV;
+
+      if (inputV.toLowerCase().trim() == jsonDoneQa[jsonDoneQa.length-1].question.toLowerCase().trim() ){
+        setNumQuesCor(numQuesCor + 1);
+      }
+
+      if (jsonQa.length === 0) {
 //        SpeakEnglish("The test has been completed.");
 //        event.target.disabled = true;
 //        fetch(`/example-backend/api/v1/data/complete-test?level=${props.level}&group=${group}&section=${section}`, {method: "POST", body:JSON.stringify(jsonDoneWords)})
@@ -64,12 +63,17 @@ export default (props) => {
 //          .then(body => {
 //            console.log("Completed the data upload");
 //           });
-//        return;
-//      }
-//
-//      let word = jsonWords.shift();
-//      jsonDoneWords.push(word);
-//      SpeakEnglish(word.enword);
+        return;
+      }
+
+        let qa = jsonQa.shift();
+        let urls = JSON.parse(qa.urls);
+
+        setImage(urls[RandomInt(20)]);
+
+        timer = Date.now();
+        jsonDoneQa.push(qa)
+        console.log("Starting to render the pic");
     }
   };
 
@@ -91,6 +95,7 @@ export default (props) => {
       console.log('changed!');
     }
   };
+
   const EikenLevelName = (theLevel) => {
     switch (theLevel) {
       case "level 1-2":   return "英検一級"
