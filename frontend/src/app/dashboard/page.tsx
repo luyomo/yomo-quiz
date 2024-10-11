@@ -31,7 +31,8 @@ import { EikenIcon} from '../../../icons/Icons.tsx';
 import { createStyles } from 'antd-style';
 import EikenAudio2Word       from './EikenGroupSection.tsx';
 import SciencePictorialPlant from './SciencePictorialPlant.tsx';
-import SciencePictorialRead from './SciencePictorialRead.tsx';
+import SciencePictorialRead  from './SciencePictorialRead.tsx';
+import HistoryChoice         from './HistoryChoice.tsx';
 
 
 const useStyle = createStyles(({ prefixCls, css }) => ({
@@ -93,6 +94,13 @@ export default () => {
       case "/science/pictorial/plant":                    return <SciencePictorialPlant         />
       case "/science/pictorial/pic-read":                 return <SciencePictorialRead          />
 
+      // History Index
+      case "/history/index":                              return <HistoryIndex                  />
+
+      case "/history/inter-02":                           return <HisortyInter2                 />
+
+      case "/history/inter-02/choice":                    return <HistoryChoice                 />
+
       default:                                            return <TopLevel                      />
     }
   }
@@ -103,6 +111,7 @@ export default () => {
           <Button size="large" icon={<AntDesignOutlined />} onClick={() => setPathname("/eiken/index") } >英検単語</Button>
           <Button size="large" onClick={() => alert(`Write English From JP`)} >JPREP</Button>
           <Button size="large" onClick={() => setPathname("/science/index") }  >理      科</Button>
+          <Button size="large" onClick={() => setPathname("/history/index") }  >歴      史</Button>
       </ConfigProvider>
     </Flex>)
 
@@ -148,6 +157,21 @@ export default () => {
     </Flex>)
 
 //  const SciencePictorialPlant = () => ("Todo: 図鑑 question here to do");
+
+  // Hisotry
+  const HistoryIndex = () => (
+    <Flex vertical gap="large" style={{ width: '100%' }}>
+      <ConfigProvider button={{ className: styles.linearGradientButton }} >
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => { setPathname("/history/inter-02");} } >中学校2年生</Button>
+      </ConfigProvider>
+    </Flex>)
+
+  const HisortyInter2 = () => (
+    <Flex vertical gap="large" style={{ width: '100%' }}>
+      <ConfigProvider button={{ className: styles.linearGradientButton }} >
+          <Button size="large" icon={<AntDesignOutlined />} onClick={() => { setPathname("/history/inter-02/choice");} } >選択問題</Button>
+      </ConfigProvider>
+    </Flex>)
 
   return mounted && (
     <div id="test-pro-layout" style={{ height: '100vh' }} >
