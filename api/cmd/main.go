@@ -39,6 +39,40 @@ func main() {
     }
   })
 
+  r.GET("/api/v1/history/choice-qa", func(c *gin.Context) {
+    user := c.Query("user")
+    dataType := c.Query("type")
+    switch dataType {
+      case "new":
+        retData := fetchHistoryChoiceNew(&user)
+        c.String(http.StatusOK, string(retData))
+      case "failure":
+        retData := fetchHistoryChoiceFailure(&user)
+        c.String(http.StatusOK, string(retData))
+      default:
+        fmt.Printf("Unsupported type: %s \n", dataType)
+    }
+  })
+
+  r.POST("/api/v1/history/choice-qa", func(c *gin.Context) {
+    byteData, err := io.ReadAll(c.Request.Body)
+    if err != nil {
+        // Handle error
+    }
+    fmt.Printf("The json Data: %#v \n", string(byteData) )
+
+    var jsonData PostSciencePictorialPlant
+    json.Unmarshal(byteData, &jsonData)
+    fmt.Printf("Json parsed data: %#v \n", jsonData)
+
+    err =  postHistoryChoiceQA(jsonData)
+    if err != nil {
+      c.String(http.StatusOK, "Failure")
+    } else {
+      c.String(http.StatusOK, "Successful")
+    }
+  })
+
   r.GET("/api/v1/science/pictorial/pic-read", func(c *gin.Context) {
     user := c.Query("user")
     dataType := c.Query("type")
@@ -190,6 +224,14 @@ func fetchSciencePictorialPlantFailure(user *string) []byte {
    return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join science_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id limit 5`, *user))
 }
 
+func fetchHistoryChoiceNew(user *string) []byte {
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join general_choice_qa t3 on t2.question_id = t3.sequence where t2.question_id is null order by t3.sequence limit 5`, *user))
+}
+
+func fetchHistoryChoiceFailure(user *string) []byte {
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join general_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id limit 5`, *user))
+}
+
 func fetchSciencePictorialPlant(query string) []byte {
   db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
   if err != nil {
@@ -289,6 +331,67 @@ func postSciencePictorialPlant(reqData PostSciencePictorialPlant) error  {
   return nil
 }
 
+
+func postHistoryChoiceQA(reqData PostSciencePictorialPlant) error  {
+
+  db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
+  if err != nil {
+    panic(err)
+  }
+  // See "Important settings" section.
+  db.SetConnMaxLifetime(time.Minute * 3)
+  db.SetMaxOpenConns(10)
+  db.SetMaxIdleConns(10)
+
+  defer db.Close()
+
+  tx, err := db.Begin()
+
+  queryString := "insert into general_choice_qa_test(userAccount) values (?)"
+
+  response, err := tx.Exec(queryString, reqData.User)
+
+  if err != nil {
+     fmt.Printf("Failed to insert data: %#v \n", err)
+     tx.Rollback()
+     return err
+  }
+
+  testId, err := response.LastInsertId()
+  if err != nil {
+     fmt.Printf("Failed to get Last insert id: %#v \n", err)
+     tx.Rollback()
+     return err
+  }
+
+  queryString = "insert into general_choice_qa_hist(test_id, sequence, question_id, answer, is_correct, time_taken) values (?, ?, ?, ?, ?, ?)"
+  for idx, row := range reqData.SciencePictorialPlant {
+    var isCorrect bool
+    if row.IsCorrect == 1 {
+      isCorrect = true
+    }else {
+      isCorrect = false
+    }
+
+    var err error
+    if row.Answer == 9 {
+        _, err = tx.Exec(queryString, testId, idx, row.Sequence, "Unknow question", isCorrect, 0)
+    } else {
+        _, err = tx.Exec(queryString, testId, idx, row.Sequence, row.Answers[row.Answer - 1], isCorrect, 0)
+    }
+
+    if err != nil {
+       fmt.Printf("Failed to insert data: %#v \n", err)
+       tx.Rollback()
+       return err
+    }
+  }
+
+
+  fmt.Printf("Response data: %#v \n", testId)
+  tx.Commit()
+  return nil
+}
 
 type SciencePic struct {
   Sequence int    `json:"sequence"`

@@ -7,6 +7,8 @@ import type { InputRef } from 'antd';
 
 import {  RandomInt } from './Utils.tsx';
 
+import AudioRecorder from './Audio.tsx'
+
 const cardStyle: React.CSSProperties = {
   width: 780,
   height: 640,
@@ -242,6 +244,9 @@ export default (props) => {
       </Flex>
       <Flex justify='flex-end'>
         <Countdown title="Seconds" value={Date.now() + 60 * 1000} format="HH:mm:ss" onFinish={ () => {alert("Completed the count down")} } />
+      </Flex>
+      <Flex justify='flex-end'>
+        <AudioRecorder />
       </Flex>
     </Flex>
     </Card>
