@@ -29,11 +29,26 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useCookies             } from 'react-cookie';
 import { EikenIcon} from '../../../icons/Icons.tsx';
 import { createStyles } from 'antd-style';
+import React from 'react';
+
 import EikenAudio2Word       from './EikenGroupSection.tsx';
 import SciencePictorialPlant from './SciencePictorialPlant.tsx';
 import SciencePictorialRead  from './SciencePictorialRead.tsx';
 import HistoryChoice         from './HistoryChoice.tsx';
 
+const EikenJP2Word        = () => ("Todo: Write English Words from JP");
+const EikenAudio2Sentence = () => ("Todo: Write English Sentence from Audio");
+const EikenJP2Sentence    = () => ("Todo: Write English Sentence from JP");
+
+const MapComponent = {
+  "EikenAudio2Word"       : EikenAudio2Word,
+  "SciencePictorialPlant" : SciencePictorialPlant,
+  "SciencePictorialRead"  : SciencePictorialRead,
+  "HistoryChoice"         : HistoryChoice,
+  "EikenJP2Word"          : EikenJP2Word,
+  "EikenAudio2Sentence"   : EikenAudio2Sentence,
+  "EikenJP2Sentence"      : EikenJP2Sentence
+};
 
 const useStyle = createStyles(({ prefixCls, css }) => ({
   linearGradientButton: css`
@@ -74,97 +89,92 @@ export default () => {
 
 
   useEffect(() => { 
-//    fetch('/api/example.json')
-//      .then(response => response.json())
-//      .then(data => {
-//        setMenuData(data || []);
-//      });
-    setMenuData({
-          path: '/',
-          routes: [
-            {
-              name: '英検',
-              path: '/eiken/index',
-              routes: [
-                { path: '/eiken/ques-type1-2' , name: '一   級'     , icon: <CrownOutlined />,
-                  routes: [
-                    { path: '/eiken/ques-type1-2/audio2engWord'     , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 1-2" /> },
-                    { path: '/eiken/ques-type1-2/jp2engWord'        , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 1-2" /> },
-                    { path: '/eiken/ques-type1-2/audio2engSentence' , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 1-2" /> },
-                    { path: '/eiken/ques-type1-2/jp2engSentence'    , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 1-2" /> },
-                  ],
-                },
-                { path: '/eiken/ques-type1-1' , name: '準一級'      , icon: <CrownOutlined />,
-                  routes: [
-                    { path: '/eiken/ques-type1-1/audio2engWord'     , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 1-1" /> },
-                    { path: '/eiken/ques-type1-1/jp2engWord'        , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 1-1" /> },
-                    { path: '/eiken/ques-type1-1/audio2engSentence' , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 1-1" /> },
-                    { path: '/eiken/ques-type1-1/jp2engSentence'    , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 1-1" /> },
-                  ],
-                },
-                { path: '/eiken/ques-type2-2' , name: '二   級'     , icon: <CrownOutlined />,
-                  routes: [
-                    { path: '/eiken/ques-type2-2/audio2engWord'     , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 2-2" /> },
-                    { path: '/eiken/ques-type2-2/jp2engWord'        , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 2-2" /> },
-                    { path: '/eiken/ques-type2-2/audio2engSentence' , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 2-2" /> },
-                    { path: '/eiken/ques-type2-2/jp2engSentence'    , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 2-2" /> },
-                  ],
-                },
-                { path: '/eiken/ques-type2-1' , name: '準二級'      , icon: <CrownOutlined />,
-                  routes: [
-                    { path: '/eiken/ques-type2-1/audio2engWord'     , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 2-1" /> },
-                    { path: '/eiken/ques-type2-1/jp2engWord'        , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 2-1" /> },
-                    { path: '/eiken/ques-type2-1/audio2engSentence' , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 2-1" /> },
-                    { path: '/eiken/ques-type2-1/jp2engSentence'    , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 2-1" /> },
-                  ],
-                },
-                { path: '/eiken/ques-type3' , name: '三   級'       , icon: <CrownOutlined />,
-                  routes: [
-                    { path: '/eiken/ques-type3/audio2engWord'       , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 3" /> },
-                    { path: '/eiken/ques-type3/jp2engWord'          , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 3" /> },
-                    { path: '/eiken/ques-type3/audio2engSentence'   , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 3" /> },
-                    { path: '/eiken/ques-type3/jp2engSentence'      , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 3" /> },
-                  ],
-                },
-              ],
-            },
-
-            {
-              name: '理      科',
-              path: '/science/index',
-              routes: [
-                { path: '/science/pictorial/plant' , name: '図    鑑'     , icon: <CrownOutlined />,
-                  routes: [
-                    { path: '/science/pictorial/plant'     , name: '植物選択'  , component: <SciencePictorialPlant  /> },
-                    { path: '/science/pictorial/pic-read'  , name: '植物図読'  , component: <SciencePictorialRead   /> },
-                  ],
-                },
-              ],
-            },
-
-
-            {
-              name: '歴    史',
-              path: '/history/index',
-              routes: [
-                { path: '/history/inter-02' , name: '中学校2年生'     , icon: <CrownOutlined />,
-                  routes: [
-                    { path: '/history/inter-02/choice'     , name: '選択問題'  , component: <HistoryChoice /> },
-                  ],
-                },
-              ],
-            },
-
-          ],
-        }
-      );
+    fetch('/example-backend/api/v1/menu')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        setMenuData({path: '/', routes: data } || []);
+      });
+//    setMenuData({
+//          path: '/', 
+//          routes: [
+//            {
+//              name: '英検', path: '/eiken',
+//              routes: [
+//                { path: '/eiken/ques-type1-2' , name: '一   級'     , icon: <CrownOutlined />,
+//                  routes: [
+//                    { path: '/eiken/ques-type1-2/audio2engWord'     , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 1-2" /> },
+//                    { path: '/eiken/ques-type1-2/jp2engWord'        , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 1-2" /> },
+//                    { path: '/eiken/ques-type1-2/audio2engSentence' , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 1-2" /> },
+//                    { path: '/eiken/ques-type1-2/jp2engSentence'    , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 1-2" /> },
+//                  ],
+//                },
+//                { path: '/eiken/ques-type1-1' , name: '準一級'      , icon: <CrownOutlined />,
+//                  routes: [
+//                    { path: '/eiken/ques-type1-1/audio2engWord'     , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 1-1" /> },
+//                    { path: '/eiken/ques-type1-1/jp2engWord'        , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 1-1" /> },
+//                    { path: '/eiken/ques-type1-1/audio2engSentence' , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 1-1" /> },
+//                    { path: '/eiken/ques-type1-1/jp2engSentence'    , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 1-1" /> },
+//                  ],
+//                },
+//                { path: '/eiken/ques-type2-2' , name: '二   級'     , icon: <CrownOutlined />,
+//                  routes: [
+//                    { path: '/eiken/ques-type2-2/audio2engWord'     , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 2-2" /> },
+//                    { path: '/eiken/ques-type2-2/jp2engWord'        , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 2-2" /> },
+//                    { path: '/eiken/ques-type2-2/audio2engSentence' , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 2-2" /> },
+//                    { path: '/eiken/ques-type2-2/jp2engSentence'    , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 2-2" /> },
+//                  ],
+//                },
+//                { path: '/eiken/ques-type2-1' , name: '準二級'      , icon: <CrownOutlined />,
+//                  routes: [
+//                    { path: '/eiken/ques-type2-1/audio2engWord'     , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 2-1" /> },
+//                    { path: '/eiken/ques-type2-1/jp2engWord'        , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 2-1" /> },
+//                    { path: '/eiken/ques-type2-1/audio2engSentence' , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 2-1" /> },
+//                    { path: '/eiken/ques-type2-1/jp2engSentence'    , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 2-1" /> },
+//                  ],
+//                },
+//                { path: '/eiken/ques-type3' , name: '三   級'       , icon: <CrownOutlined />,
+//                  routes: [
+//                    { path: '/eiken/ques-type3/audio2engWord'       , name: 'Write English From Audio'          , component: <EikenAudio2Word     level="level 3" /> },
+//                    { path: '/eiken/ques-type3/jp2engWord'          , name: 'Write English From JP'             , component: <EikenJP2Word        level="level 3" /> },
+//                    { path: '/eiken/ques-type3/audio2engSentence'   , name: 'Write English Sentence From Audio' , component: <EikenAudio2Sentence level="level 3" /> },
+//                    { path: '/eiken/ques-type3/jp2engSentence'      , name: 'Write English Sentence from JP'    , component: <EikenJP2Sentence    level="level 3" /> },
+//                  ],
+//                },
+//              ],
+//            },
+//
+//            {
+//              name: '理      科', path: '/science/index',
+//              routes: [
+//                { path: '/science/pictorial/plant' , name: '図    鑑'     , icon: <CrownOutlined />,
+//                  routes: [
+//                    { path: '/science/pictorial/plant'     , name: '植物選択'  , component: <SciencePictorialPlant  /> },
+//                    { path: '/science/pictorial/pic-read'  , name: '植物図読'  , component: <SciencePictorialRead   /> },
+//                  ],
+//                },
+//              ],
+//            },
+//
+//
+//            {
+//              name: '歴    史', path: '/history/index',
+//              routes: [
+//                { path: '/history/inter-02' , name: '中学校2年生'     , icon: <CrownOutlined />,
+//                  routes: [
+//                    { path: '/history/inter-02/choice'     , name: '選択問題'  , component: <HistoryChoice /> },
+//                  ],
+//                },
+//              ],
+//            },
+//
+//          ],
+//        }
+//      );
 
     setMounted(true);
    }, [])
 
-  const EikenJP2Word        = () => ("Todo: Write English Words from JP");
-  const EikenAudio2Sentence = () => ("Todo: Write English Sentence from Audio");
-  const EikenJP2Sentence    = () => ("Todo: Write English Sentence from JP");
 
   return mounted && (
     <div id="test-pro-layout" style={{ height: '100vh' }} >
@@ -188,8 +198,13 @@ export default () => {
         onMenuHeaderClick={(e) => { console.log(e); setPathname("/init-component");} }
         menuItemRender={(item, dom) => ( <a onClick={() => {
           console.log("---------");
-          console.log(item);
-          setComponent(item.component);
+          console.log(item.component);
+          let component = React.createElement(MapComponent[item.component], item.params);
+//          let component = MapComponent[item.component];
+//          const obj = Object.assign(item.params, component);
+
+//          console.log(component);
+          setComponent(component);
 
 //          var rx = /\/eiken\/ques-type(.*)\/(.*)/g;
 //          var arr = rx.exec(item.path);

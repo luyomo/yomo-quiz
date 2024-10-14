@@ -14,6 +14,23 @@ import (
 
 func main() {
   r := gin.Default()
+
+  r.GET("/api/v1/menu", func(c *gin.Context) {
+  user := c.Query("user")
+  ret := fetchMenu(user)
+  c.String(http.StatusOK, string(ret))
+//    switch dataType {
+//      case "new":
+//        retData := fetchHistoryChoiceNew(&user)
+//        c.String(http.StatusOK, string(retData))
+//      case "failure":
+//        retData := fetchHistoryChoiceFailure(&user)
+//        c.String(http.StatusOK, string(retData))
+//      default:
+//        fmt.Printf("Unsupported type: %s \n", dataType)
+//    }
+  })
+
   r.GET("/api/v1/eiken-level-info", func(c *gin.Context) {
     retData := fetchEikenPhase()
     c.String(http.StatusOK, string(retData))
@@ -65,7 +82,7 @@ func main() {
     json.Unmarshal(byteData, &jsonData)
     fmt.Printf("Json parsed data: %#v \n", jsonData)
 
-    err =  postHistoryChoiceQA(jsonData)
+    err = postHistoryChoiceQA(jsonData)
     if err != nil {
       c.String(http.StatusOK, "Failure")
     } else {
@@ -387,7 +404,6 @@ func postHistoryChoiceQA(reqData PostSciencePictorialPlant) error  {
     }
   }
 
-
   fmt.Printf("Response data: %#v \n", testId)
   tx.Commit()
   return nil
@@ -430,4 +446,83 @@ func fetchSciencePic(user string) []byte {
   }
   db.Close()
   return bytesData
+}
+
+type MenuRow struct {
+    Sequence        int       `json:"-"`
+    ParentMenuId    int       `json:"-"`
+    Path            string    `json:"path"`
+    Name            string    `json:"name"`
+    Component       string    `json:"component,omitempty"`
+    ComponentParams map[string]string    `json:"params,omitempty"`
+    Children        []MenuRow `json:"routes,omitempty"`
+}
+
+func fetchMenu(user string) []byte {
+  db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
+  if err != nil {
+    panic(err)
+  }
+  // See "Important settings" section.
+  db.SetConnMaxLifetime(time.Minute * 3)
+  db.SetMaxOpenConns(10)
+  db.SetMaxIdleConns(10)
+
+  var arrData []MenuRow
+//  mapData := make(map[int]MenuRow)
+
+  rows, err := db.Query("select sequence, parent_menu_id, path, name, coalesce(component, '') as component, coalesce(component_params, '') as component_params from menu_master order by sequence") 
+
+  checkErr(err)
+  for rows.Next() {
+    var row MenuRow
+    var componentParams string
+
+    err = rows.Scan(&row.Sequence, &row.ParentMenuId, &row.Path, &row.Name, &row.Component, &componentParams)
+    checkErr(err)
+    fmt.Printf("The row: %#v \n", row)
+
+    fmt.Printf("before parsed component params : %#v \n", componentParams)
+    json.Unmarshal([]byte(componentParams), &row.ComponentParams)
+    fmt.Printf("After parsed data: %#v \n", row.ComponentParams)
+
+    pushedFlg := pushMenuRow(row, &arrData) 
+    if pushedFlg == false {
+      row.Path = fmt.Sprintf("/%s", row.Path)
+      arrData = append(arrData, row)
+    }
+    fmt.Printf("after pushed data: %#v \n\n", arrData)
+  }
+
+  fmt.Printf("Final result: %#v \n", arrData)
+  bytesData, err := json.Marshal(arrData)
+  if err != nil {
+    panic(err)
+  }
+
+//  bytesData, err := json.Marshal(arrData)
+//  if err != nil {
+//    panic(err)
+//  }
+  db.Close()
+  return bytesData
+}
+
+func pushMenuRow(menuRow MenuRow, arrData *[]MenuRow) bool {
+//  for _, row := range *arrData {
+  for idx:=0; idx < len((*arrData)); idx++{
+    fmt.Printf(" ---- %d -> %d \n", menuRow.ParentMenuId, (*arrData)[idx].Sequence)
+    if menuRow.ParentMenuId == (*arrData)[idx].Sequence {
+      menuRow.Path = fmt.Sprintf("%s/%s", (*arrData)[idx].Path, menuRow.Path)
+      (*arrData)[idx].Children = append((*arrData)[idx].Children, menuRow)
+      return true
+    } else {
+      ret := pushMenuRow(menuRow, &((*arrData)[idx].Children))
+      if ret == true {
+        return true
+      }
+    }
+  }
+
+  return false
 }
