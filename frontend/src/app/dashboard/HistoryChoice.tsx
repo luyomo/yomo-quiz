@@ -1,13 +1,12 @@
 "use client";
 
-import { Button, Typography, Flex, Card, Radio, Space, ConfigProvider, message } from 'antd';
+import { Select, Button, Typography, Flex, Card, Radio, Space, ConfigProvider, message } from 'antd';
 import { useState, useEffect } from 'react';
 import { createStyles } from 'antd-style';
 import { CorrectIcon, WrongIcon} from '../../../icons/Icons.tsx';
 import { PlayCircleOutlined } from '@ant-design/icons';
 
 import { SpeakJapanese } from './Utils.tsx';
-
 
 const { Paragraph } = Typography;
 import _ from 'lodash';
@@ -53,8 +52,21 @@ export default (props) => {
   const [messageApi, contextHolder] = message.useMessage();
   const { styles } = useStyle();
   const [cookies, setCookie] = useCookies([]);
+  const [term  , setTerm  ] = useState("");
+  const [terms , setTerms ] = useState([]);
+  const [group , setGroup ] = useState("");
+  const [groups, setGroups] = useState([]);
 
   useEffect(() => { 
+    fetch(`/example-backend/api/v1/choice_qa/level02?` + new URLSearchParams(props))
+      .then(response => console.log(response.status) || response)
+      .then(response => response.json())
+      .then(body => {
+        console.log(body);
+        setTerms(body);
+      });
+
+    console.log("The level 01:", props.level01);
     setMounted(true);
 
    }, [])
@@ -116,8 +128,14 @@ export default (props) => {
   const onNextFailure = () => { onNext("failure", "No failure questions are available."); };
 
   const onNext = (theType, message) => {
-    fetch(`/example-backend/api/v1/history/choice-qa?` + new URLSearchParams({
-         user: cookies.user_email, type: theType}).toString())
+    // so the cloneDeep is required to change the object pointer.
+    let params = _.cloneDeep(props);
+    params["user"] = cookies.user_email;
+    params["type"] = theType;
+    params["level02"] = term;
+    params["level03"] = group;
+
+    fetch(`/example-backend/api/v1/history/choice-qa?` + new URLSearchParams(params).toString())
       .then(response => console.log(response.status) || response)
       .then(response => response.text())
       .then(body => {
@@ -155,15 +173,53 @@ export default (props) => {
         setData(convertedJsonData);
       });
   };
+  const onTermChange = (e) => {
+    console.log("Term value was changed");
+    console.log(e);
+    setTerm(e);
+    // so the cloneDeep is required to change the object pointer.
+    let params = _.cloneDeep(props);
+    params["level02"] = e;
+    fetch(`/example-backend/api/v1/choice_qa/level03?` + new URLSearchParams(params))
+      .then(response => console.log(response.status) || response)
+      .then(response => response.json())
+      .then(body => {
+        console.log(body);
+        setGroups(body);
+      });
+  };
+  const onGroupChange = (event) => {setGroup(event)};
 
   return mounted && (
     <div>
       {contextHolder}
-      <Flex vertical gap="large" style={{ width: '100%' }}>
+      <Flex>
+      <Flex vertical justify='space-evenly' align='center' style={{ width: 180 }}  >
+        <Flex justify='space-evenly' gap={ 20 }>
+          <Typography>Term</Typography>
+          <Select
+            defaultValue={terms[0]}
+            style={{ width: 120 }}
+            onChange={onTermChange}
+            options={terms.map((term) => ({ label: term, value: term}))}
+          />
+        </Flex>
+        <Flex justify='space-evenly' gap={ 20 }>
+          <Typography>Group</Typography>
+          <Select
+            style={{ width: 120 }}
+            value={group}
+            onChange={onGroupChange}
+            options={groups.map((group) => ({ label: group, value: group}))}
+          />
+        </Flex>
+      </Flex>
+      <Flex vertical gap="large" style={{ width: '70%' }}>
         <ConfigProvider button={{ className: styles.linearGradientButton }} >
           <Button size="large" onClick={onNextNew} >Next 10 New Questions</Button>
           <Button size="large" onClick={onNextFailure} >Next 10 Failed Questions</Button>
         </ConfigProvider >
+      </Flex>
       </Flex>
       {data.map(function(object, i){
         return (

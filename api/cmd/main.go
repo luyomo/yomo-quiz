@@ -31,6 +31,21 @@ func main() {
 //    }
   })
 
+  r.GET("/api/v1/choice_qa/level02", func(c *gin.Context) {
+    level01 := c.Query("level01")
+
+    retData := fetchChoiceQALevel02(level01)
+    c.String(http.StatusOK, string(retData))
+  })
+
+  r.GET("/api/v1/choice_qa/level03", func(c *gin.Context) {
+    level01 := c.Query("level01")
+    level02 := c.Query("level02")
+
+    retData :=  fetchChoiceQALevel03(level01, level02)
+    c.String(http.StatusOK, string(retData))
+  })
+
   r.GET("/api/v1/eiken-level-info", func(c *gin.Context) {
     retData := fetchEikenPhase()
     c.String(http.StatusOK, string(retData))
@@ -59,12 +74,16 @@ func main() {
   r.GET("/api/v1/history/choice-qa", func(c *gin.Context) {
     user := c.Query("user")
     dataType := c.Query("type")
+    level01 := c.Query("level01")
+    level02 := c.Query("level02")
+    level03 := c.Query("level03")
+
     switch dataType {
       case "new":
-        retData := fetchHistoryChoiceNew(&user)
+        retData := fetchHistoryChoiceNew(&user, &level01, &level02, &level03)
         c.String(http.StatusOK, string(retData))
       case "failure":
-        retData := fetchHistoryChoiceFailure(&user)
+        retData := fetchHistoryChoiceFailure(&user, &level01, &level02, &level03)
         c.String(http.StatusOK, string(retData))
       default:
         fmt.Printf("Unsupported type: %s \n", dataType)
@@ -156,6 +175,68 @@ func checkErr(err error) {
     }
 }
 
+func fetchChoiceQALevel02(level01 string) []byte {
+  db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
+  if err != nil {
+    panic(err)
+  }
+  // See "Important settings" section.
+  db.SetConnMaxLifetime(time.Minute * 3)
+  db.SetMaxOpenConns(10)
+  db.SetMaxIdleConns(10)
+
+  var arrLevel02 []string
+
+  rows , err := db.Query(fmt.Sprintf("select distinct level02 from choice_qa_category where level01 = '%s'", level01))
+  checkErr(err)
+  for rows.Next() {
+    var level02 string
+    err = rows.Scan(&level02)
+    checkErr(err)
+    arrLevel02 = append(arrLevel02, level02)
+  }
+
+  fmt.Printf("%#v", arrLevel02)
+  bytesInfo, err := json.Marshal(arrLevel02)
+  if err != nil {
+    panic(err)
+  }
+  fmt.Printf("%#v", bytesInfo)
+  db.Close()
+  return bytesInfo
+}
+
+func fetchChoiceQALevel03(level01, level02 string) []byte {
+  db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
+  if err != nil {
+    panic(err)
+  }
+  // See "Important settings" section.
+  db.SetConnMaxLifetime(time.Minute * 3)
+  db.SetMaxOpenConns(10)
+  db.SetMaxIdleConns(10)
+
+  var arrLevel03 []string
+
+  rows , err := db.Query(fmt.Sprintf("select distinct level03 from choice_qa_category where level01 = '%s' and level02='%s'", level01, level02))
+  checkErr(err)
+  for rows.Next() {
+    var level03 string
+    err = rows.Scan(&level03)
+    checkErr(err)
+    arrLevel03 = append(arrLevel03, level03)
+  }
+
+  fmt.Printf("%#v", arrLevel03)
+  bytesInfo, err := json.Marshal(arrLevel03)
+  if err != nil {
+    panic(err)
+  }
+  fmt.Printf("%#v", bytesInfo)
+  db.Close()
+  return bytesInfo
+}
+
 func fetchEikenPhase() []byte {
   db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
   if err != nil {
@@ -241,12 +322,12 @@ func fetchSciencePictorialPlantFailure(user *string) []byte {
    return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join science_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id limit 5`, *user))
 }
 
-func fetchHistoryChoiceNew(user *string) []byte {
-   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join general_choice_qa t3 on t2.question_id = t3.sequence where t2.question_id is null order by t3.sequence limit 5`, *user))
+func fetchHistoryChoiceNew(user, level01, level02, level03 *string) []byte {
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join general_choice_qa t3 on t2.question_id = t3.sequence inner join choice_qa_category t4 on t4.sequence = t3.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03 = '%s'  where t2.question_id is null order by t3.sequence limit 5`, *user, *level01, *level02, *level03))
 }
 
-func fetchHistoryChoiceFailure(user *string) []byte {
-   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join general_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id limit 5`, *user))
+func fetchHistoryChoiceFailure(user, level01, level02, level03 *string) []byte {
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join general_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id inner join choice_qa_category t4 on t4.sequence = t3.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03  = '%s' limit 5`, *user, *level01, *level02, *level03))
 }
 
 func fetchSciencePictorialPlant(query string) []byte {
