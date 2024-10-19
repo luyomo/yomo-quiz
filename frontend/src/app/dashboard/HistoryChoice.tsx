@@ -58,7 +58,10 @@ export default (props) => {
   const [groups, setGroups] = useState([]);
 
   useEffect(() => { 
-    fetch(`/example-backend/api/v1/choice_qa/level02?` + new URLSearchParams(props))
+    let params = _.cloneDeep(props);
+    params["questionType"] = "choice";
+
+    fetch(`/example-backend/api/v1/question-list/level02?` + new URLSearchParams(params))
       .then(response => console.log(response.status) || response)
       .then(response => response.json())
       .then(body => {
@@ -174,13 +177,12 @@ export default (props) => {
       });
   };
   const onTermChange = (e) => {
-    console.log("Term value was changed");
-    console.log(e);
     setTerm(e);
     // so the cloneDeep is required to change the object pointer.
     let params = _.cloneDeep(props);
     params["level02"] = e;
-    fetch(`/example-backend/api/v1/choice_qa/level03?` + new URLSearchParams(params))
+    params["questionType"] = "choice";
+    fetch(`/example-backend/api/v1/question-list/level03?` + new URLSearchParams(params))
       .then(response => console.log(response.status) || response)
       .then(response => response.json())
       .then(body => {

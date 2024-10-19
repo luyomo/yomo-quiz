@@ -35,6 +35,7 @@ import EikenAudio2Word       from './EikenGroupSection.tsx';
 import SciencePictorialPlant from './SciencePictorialPlant.tsx';
 import SciencePictorialRead  from './SciencePictorialRead.tsx';
 import HistoryChoice         from './HistoryChoice.tsx';
+import FillInBlank           from './FillInBlank.tsx';
 
 const EikenJP2Word        = () => ("Todo: Write English Words from JP");
 const EikenAudio2Sentence = () => ("Todo: Write English Sentence from Audio");
@@ -47,7 +48,8 @@ const MapComponent = {
   "HistoryChoice"         : HistoryChoice,
   "EikenJP2Word"          : EikenJP2Word,
   "EikenAudio2Sentence"   : EikenAudio2Sentence,
-  "EikenJP2Sentence"      : EikenJP2Sentence
+  "EikenJP2Sentence"      : EikenJP2Sentence,
+  "FillInBlank"           : FillInBlank,
 };
 
 const useStyle = createStyles(({ prefixCls, css }) => ({
@@ -200,22 +202,7 @@ export default () => {
           console.log("---------");
           console.log(item.component);
           let component = React.createElement(MapComponent[item.component], item.params);
-//          let component = MapComponent[item.component];
-//          const obj = Object.assign(item.params, component);
-
-//          console.log(component);
           setComponent(component);
-
-//          var rx = /\/eiken\/ques-type(.*)\/(.*)/g;
-//          var arr = rx.exec(item.path);
-//          console.log(arr);
-//          if (arr.length === 3) {
-//            setPathname(`/eiken/ques-type/${arr[2]}`);
-//            setLevel(`level ${arr[1]}`);
-//          }else {
-//            setPathname(pathname);
-//          }
-
           }} > {dom} </a>)}
       >
         <PageContainer content={ component } >

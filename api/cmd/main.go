@@ -31,18 +31,20 @@ func main() {
 //    }
   })
 
-  r.GET("/api/v1/choice_qa/level02", func(c *gin.Context) {
-    level01 := c.Query("level01")
+  r.GET("/api/v1/question-list/level02", func(c *gin.Context) {
+    questionType := c.Query("questionType")
+    level01      := c.Query("level01")
 
-    retData := fetchChoiceQALevel02(level01)
+    retData := fetchChoiceQALevel02(questionType, level01)
     c.String(http.StatusOK, string(retData))
   })
 
-  r.GET("/api/v1/choice_qa/level03", func(c *gin.Context) {
-    level01 := c.Query("level01")
-    level02 := c.Query("level02")
+  r.GET("/api/v1/question-list/level03", func(c *gin.Context) {
+    questionType := c.Query("questionType")
+    level01      := c.Query("level01")
+    level02      := c.Query("level02")
 
-    retData :=  fetchChoiceQALevel03(level01, level02)
+    retData :=  fetchChoiceQALevel03(questionType, level01, level02)
     c.String(http.StatusOK, string(retData))
   })
 
@@ -146,6 +148,35 @@ func main() {
     }
   })
 
+  r.GET("/api/v1/fill-in-blank", func(c *gin.Context) {
+    user := c.Query("user")
+    level01 := c.Query("level01")
+    level02 := c.Query("level02")
+    level03 := c.Query("level03")
+
+    retData :=  fetchFillInBlankQA(&user, &level01, &level02, &level03)
+    c.String(http.StatusOK, string(retData))
+  })
+
+  r.POST("/api/v1/fill-in-blank", func(c *gin.Context) {
+    byteData, err := io.ReadAll(c.Request.Body)
+    if err != nil {
+        // Handle error
+    }
+    fmt.Printf("The json Data: %#v \n", string(byteData) )
+
+    var jsonData PostFillInBlankQA 
+    json.Unmarshal(byteData, &jsonData)
+    fmt.Printf("Json parsed data: %#v \n", jsonData)
+
+    err = postFillInBlankQA(jsonData)
+    if err != nil {
+      c.String(http.StatusOK, "Failure")
+    } else {
+      c.String(http.StatusOK, "Successful")
+    }
+  })
+
   r.Run(":28080")
 }
 
@@ -175,7 +206,7 @@ func checkErr(err error) {
     }
 }
 
-func fetchChoiceQALevel02(level01 string) []byte {
+func fetchChoiceQALevel02(questionType, level01 string) []byte {
   db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
   if err != nil {
     panic(err)
@@ -187,7 +218,7 @@ func fetchChoiceQALevel02(level01 string) []byte {
 
   var arrLevel02 []string
 
-  rows , err := db.Query(fmt.Sprintf("select distinct level02 from choice_qa_category where level01 = '%s'", level01))
+  rows , err := db.Query(fmt.Sprintf("select distinct level02 from question_category where question_type = '%s' and level01 = '%s'", questionType, level01))
   checkErr(err)
   for rows.Next() {
     var level02 string
@@ -206,7 +237,7 @@ func fetchChoiceQALevel02(level01 string) []byte {
   return bytesInfo
 }
 
-func fetchChoiceQALevel03(level01, level02 string) []byte {
+func fetchChoiceQALevel03(questionType, level01, level02 string) []byte {
   db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
   if err != nil {
     panic(err)
@@ -218,7 +249,7 @@ func fetchChoiceQALevel03(level01, level02 string) []byte {
 
   var arrLevel03 []string
 
-  rows , err := db.Query(fmt.Sprintf("select distinct level03 from choice_qa_category where level01 = '%s' and level02='%s'", level01, level02))
+  rows , err := db.Query(fmt.Sprintf("select distinct level03 from question_category where question_type = '%s' and level01 = '%s' and level02='%s'", questionType, level01, level02))
   checkErr(err)
   for rows.Next() {
     var level03 string
@@ -323,11 +354,11 @@ func fetchSciencePictorialPlantFailure(user *string) []byte {
 }
 
 func fetchHistoryChoiceNew(user, level01, level02, level03 *string) []byte {
-   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join general_choice_qa t3 on t2.question_id = t3.sequence inner join choice_qa_category t4 on t4.sequence = t3.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03 = '%s'  where t2.question_id is null order by t3.sequence limit 5`, *user, *level01, *level02, *level03))
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join general_choice_qa t3 on t2.question_id = t3.sequence inner join v_choice_qa_category t4 on t4.sequence = t3.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03 = '%s'  where t2.question_id is null order by t3.sequence limit 5`, *user, *level01, *level02, *level03))
 }
 
 func fetchHistoryChoiceFailure(user, level01, level02, level03 *string) []byte {
-   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join general_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id inner join choice_qa_category t4 on t4.sequence = t3.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03  = '%s' limit 5`, *user, *level01, *level02, *level03))
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join general_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id inner join v_choice_qa_category t4 on t4.sequence = t2.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03  = '%s' limit 5`, *user, *level01, *level02, *level03))
 }
 
 func fetchSciencePictorialPlant(query string) []byte {
@@ -429,6 +460,62 @@ func postSciencePictorialPlant(reqData PostSciencePictorialPlant) error  {
   return nil
 }
 
+func postFillInBlankQA(reqData PostFillInBlankQA) error  {
+
+  db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
+  if err != nil {
+    panic(err)
+  }
+  // See "Important settings" section.
+  db.SetConnMaxLifetime(time.Minute * 3)
+  db.SetMaxOpenConns(10)
+  db.SetMaxIdleConns(10)
+
+  defer db.Close()
+
+  tx, err := db.Begin()
+
+  queryString := "insert into qa_fill_in_question_test(userAccount) values (?)"
+
+  response, err := tx.Exec(queryString, reqData.User)
+
+  if err != nil {
+     fmt.Printf("Failed to insert data: %#v \n", err)
+     tx.Rollback()
+     return err
+  }
+
+  testId, err := response.LastInsertId()
+  if err != nil {
+     fmt.Printf("Failed to get Last insert id: %#v \n", err)
+     tx.Rollback()
+     return err
+  }
+
+  queryString = "insert into qa_fill_in_question_hist(test_id, sequence, question_id, answer, is_correct, time_taken) values (?, ?, ?, ?, ?, ?)"
+
+
+  for idx, row := range reqData.FillInBlankQA {
+    var isCorrect bool
+    if row.IsCorrect == 1 {
+      isCorrect = true
+    }else {
+      isCorrect = false
+    }
+
+    _, err := tx.Exec(queryString, testId, idx, row.Sequence, row.Response, isCorrect, 0)
+
+    if err != nil {
+       fmt.Printf("Failed to insert data: %#v \n", err)
+       tx.Rollback()
+       return err
+    }
+  }
+
+  fmt.Printf("Response data: %#v \n", testId)
+  tx.Commit()
+  return nil
+}
 
 func postHistoryChoiceQA(reqData PostSciencePictorialPlant) error  {
 
@@ -606,4 +693,52 @@ func pushMenuRow(menuRow MenuRow, arrData *[]MenuRow) bool {
   }
 
   return false
+}
+
+type FillInBlankQA struct {
+  Sequence  int    `json:"sequence"`
+  Question  string `json:"question"`
+  Answer    string `json:"answer"`
+
+  Response  string `json:"response"`
+  IsCorrect int    `json:"is_correct"`
+  TimeTaken int    `json:"int"`
+  FixAnswer string `json:"fix_answer"`
+  NeedCheck string `json:"need_check"`
+}
+
+type PostFillInBlankQA struct {
+    User          string          `json:"user"`
+    FillInBlankQA []FillInBlankQA `json:"data"`
+}
+
+func fetchFillInBlankQA(user, level01, level02, level03 *string) []byte {
+  db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
+  if err != nil {
+    panic(err)
+  }
+  // See "Important settings" section.
+  db.SetConnMaxLifetime(time.Minute * 3)
+  db.SetMaxOpenConns(10)
+  db.SetMaxIdleConns(10)
+
+  var fillInBlankQAs []FillInBlankQA
+
+  query := fmt.Sprintf(`select t3.sequence, t3.question, t3.answer from qa_fill_in_question_test t1 inner join qa_fill_in_question_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join qa_fill_in_question t3 on t2.question_id = t3.sequence inner join question_category t4 on t4.sequence = t3.category and question_type = 'fill-in-blank' and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03 = '%s'  where t2.question_id is null order by t3.sequence limit 10`, *user, *level01, *level02, *level03)
+  rows , err := db.Query(query)
+
+  checkErr(err)
+  for rows.Next() {
+    var qa FillInBlankQA
+    err = rows.Scan(&qa.Sequence, &qa.Question, &qa.Answer)
+    checkErr(err)
+    fillInBlankQAs = append(fillInBlankQAs, qa)
+  }
+
+  bytesWords, err := json.Marshal(fillInBlankQAs)
+  if err != nil {
+    panic(err)
+  }
+  db.Close()
+  return bytesWords
 }

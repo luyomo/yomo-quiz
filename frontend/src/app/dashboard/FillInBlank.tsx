@@ -1,10 +1,34 @@
 "use client";
 
-import { Table, Modal, Select, Typography, Flex, Statistic, Checkbox, Button, Card, Progress, Input } from 'antd';
+import { Table, Tag, Space, Modal, Select, Typography, Flex, Statistic, Checkbox, Button, Card, Progress, Input } from 'antd';
 import { useState, useEffect, useRef } from 'react';
 import type { CountdownProps } from 'antd';
 import type { InputRef } from 'antd';
 import type { TableProps } from 'antd';
+import { useCookies             } from 'react-cookie';
+
+const columns: TableProps<DataType>['columns'] = [
+  { title: 'Seq'     , dataIndex: 'sequence', key: 'sequence' },
+  { title: 'Question', dataIndex: 'question', key: 'question' },
+  { title: 'Answer'  , dataIndex: 'answer'  , key: 'answer'   },
+  { title: 'Response', dataIndex: 'response', key: 'response' },
+  { title: 'Tags'    ,                        key: 'tags',
+    render: (_, record, idx ) => {
+        if(record.answer == record.response) {
+          return (<Tag color="blue">correct</Tag>)
+        }else{
+          return (<Tag color="red">wrong</Tag>)
+        }
+    },
+  },
+  { title: 'Action', key: 'action', render: (_, record) => (
+      <Space size="middle">
+        <a>Invite {record.name}</a>
+        <a>Delete</a>
+      </Space>
+    ),
+  },
+];
 
 const cardStyle: React.CSSProperties = {
   width: 780,
@@ -20,10 +44,10 @@ export default (props) => {
   const [mounted     , setMounted]   = useState(false);
 
   const [skipCheckAnswer, setSkipCheckAnswer] = useState(false);
+  const [term    , setTerm    ] = useState("");
+  const [terms   , setTerms   ] = useState([]);
   const [group   , setGroup   ] = useState("");
   const [groups  , setGroups  ] = useState([]);
-  const [section , setSection ] = useState("");
-  const [sections, setSections] = useState([]);
   const [question, setQuestion] = useState({"question": "This is the initial question."});
   const [answers , setAnswers ] = useState([]);
   const [open, setOpen] = useState(false);
@@ -35,6 +59,7 @@ export default (props) => {
   const [numQues2Do, setNumQues2Do] = useState(1);
 
   const inputRef = useRef<InputRef>(null);
+  const [cookies, setCookie] = useCookies([]);
 
   const { Countdown } = Statistic;
 
@@ -51,20 +76,24 @@ export default (props) => {
       timer = tmpTimer;
       jsonDoneQ[jsonDoneQ.length-1]["time_taken"] = timeTaken;
 
-      jsonDoneQ[jsonDoneQ.length-1]["answer"] = inputV;
+      jsonDoneQ[jsonDoneQ.length-1]["response"] = inputV;
       console.log(jsonDoneQ);
       console.log(inputV.toLowerCase().trim());
-      let jsonAnswers = JSON.parse(jsonDoneQ[jsonDoneQ.length-1].answers);
+//      let jsonAnswers = JSON.parse(jsonDoneQ[jsonDoneQ.length-1].answers);
 
-      if (inputV.toLowerCase().trim() == jsonAnswers[0].toLowerCase().trim() ){
+      // if (inputV.toLowerCase().trim() == jsonAnswers[0].toLowerCase().trim() ){
+      if (inputV.toLowerCase().trim() == jsonDoneQ[jsonDoneQ.length-1].answer.toLowerCase().trim() ){
         setNumQuesCor(numQuesCor + 1);
       }
 
       if (jsonQ.length === 0) {
+        // Once all the question are done, proceed the answers.
         SpeakEnglish("The test has been completed.");
         setOpen(true);
+
         event.target.disabled = true;
-        fetch(`/example-backend/api/v1/fill-in-blank?level=${props.level}&group=${group}&section=${section}`, {method: "POST", body:JSON.stringify(jsonDoneQ)})
+        // fetch(`/example-backend/api/v1/fill-in-blank?` + new URLSearchParams(params), {method: "POST", body: JSON.stringify({user: cookies.user_email, data: jsonData})})
+        fetch(`/example-backend/api/v1/fill-in-blank`, {method: "POST", body: JSON.stringify({user: cookies.user_email, data: jsonDoneQ})})
           .then(response => console.log(response.status) || response)
           .then(response => response.text())
           .then(body => {
@@ -74,6 +103,7 @@ export default (props) => {
       }
 
       let theQ = jsonQ.shift();
+      theQ["key"] = theQ["sequence"];
       jsonDoneQ.push(theQ);
       // SpeakEnglish(word.enword);
       setQuestion(theQ);
@@ -85,7 +115,6 @@ export default (props) => {
     ref: inputRef,
     onKeyUp: onInputKeyUp,
   };
-
 
   const synth = window.speechSynthesis;
 
@@ -108,29 +137,37 @@ export default (props) => {
     }
   };
 
-  const handleGroupChange = (value) => {
-    setGroup(value);
+  const onTermChange = (e) => {
+    setTerm(e);
 
-    fetch(`/example-backend/api/v1/eiken/sections?level=${props.level}&group=${value}`)
+    let params = _.cloneDeep(props);
+    params["level02"] = e;
+    params["questionType"] = "fill-in-blank";
+
+    fetch(`/example-backend/api/v1/question-list/level03?` + new URLSearchParams(params))
       .then(response => console.log(response.status) || response)
-      .then(response => response.text())
+      .then(response => response.json())
       .then(body => {
-        let jsonData = JSON.parse(body);
-        setSections(jsonData); });
+        console.log(body);
+        setGroups(body);
+      });
   };
 
-  const onSectionChange = (value) => { setSection(value); };
+  const onGroupChange = (value) => { setGroup(value); };
 
   useEffect(() => { 
     setMounted(true);
 
-    fetch(`/example-backend/api/v1/eiken/groups?level=${props.level}`)
+    let params = _.cloneDeep(props);
+    params["questionType"] = "fill-in-blank";
+
+    fetch(`/example-backend/api/v1/question-list/level02?` + new URLSearchParams(params))
       .then(response => console.log(response.status) || response)
-      .then(response => response.text())
+      .then(response => response.json())
       .then(body => {
         console.log(body);
-        let jsonData = JSON.parse(body);
-        setGroups(jsonData); });
+        setTerms(body);
+      });
    }, [])
 
   const correctnessLabel = `${skipCheckAnswer? 'Count correctness' : 'Skip Correctness'}`;
@@ -146,16 +183,17 @@ export default (props) => {
 
   // https://github.com/BradBarkel/js-text-to-speech/blob/master/dist/js/main.js
   const TestProcess = () => {
-    fetch(`/example-backend/api/v1/fill-in-blank?level=${props.level}&group=${group}&section=${section}`)
+    let params        = _.cloneDeep(props);
+    params["user"]    = cookies.user_email;
+    params["level02"] = term;
+    params["level03"] = group;
+
+    fetch(`/example-backend/api/v1/fill-in-blank?` + new URLSearchParams(params).toString())
       .then(response => console.log(response.status) || response)
       .then(response => response.json())
       .then(body => {
-        // console.log(`console output from function: ${body}`);
-        // jsonWords = JSON.parse(body);
         jsonQ = body;
 
-//        console.log(body);
-//        return
         if (body.length === 0) {
           SpeakEnglish("No available words for the specific section.");
           return;
@@ -165,6 +203,7 @@ export default (props) => {
         inputRef.current!.focus({ cursor: 'start' });
         let theQ = jsonQ.shift();
         timer = Date.now();
+        theQ["key"] = theQ["sequence"];
         jsonDoneQ.push(theQ);
         setQuestion(theQ);
         // SpeakEnglish(word.enword);
@@ -199,19 +238,19 @@ export default (props) => {
         <Flex vertical='vertical' justify='space-evenly'>
           <Typography.Title level={5}>Group</Typography.Title>
           <Select
-            defaultValue={groups[0]}
+            defaultValue={terms[0]}
             style={{ width: 120 }}
-            onChange={handleGroupChange}
-            options={groups.map((group) => ({ label: `Group ${group}`, value: group }))}
+            onChange={onTermChange}
+            options={terms.map((term) => ({ label: term, value: term }))}
           />
         </Flex>
         <Flex vertical='vertical' justify='space-evenly'>
           <Typography.Title level={5}>Section</Typography.Title>
           <Select
             style={{ width: 120 }}
-            value={section}
-            onChange={onSectionChange}
-            options={sections.map((section) => ({ label: `Section ${section}`, value: section }))}
+            value={group}
+            onChange={onGroupChange}
+            options={groups.map((group) => ({ label: group, value: group }))}
           />
         </Flex>
         <Flex vertical='vertical' justify='space-evenly' gap='large'>
@@ -225,7 +264,7 @@ export default (props) => {
       </Flex>
       <Flex vertical='vertical' justify='space-evenly' align='center'>
         { question.question.split("\\n").map(function(row, idx){
-            return (<Typography>{ row }</Typography> )
+            return (<Typography key="text-{idx}">{ row }</Typography> )
           })
         }
       </Flex>
@@ -237,16 +276,14 @@ export default (props) => {
       </Flex>
     </Flex>
     <Modal
-      title="Modal 1000px width"
+      title="To replace here"
       centered
       open={open}
       onOk={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       width={1000}
     >
-      <p>some contents...</p>
-      <p>some contents...</p>
-      <p>some contents...</p>
+      <Table<DataType> columns={columns} dataSource={jsonDoneQ} />
     </Modal>
     </Card>
     </div>
