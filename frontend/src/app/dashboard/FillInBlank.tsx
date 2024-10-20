@@ -1,10 +1,8 @@
 "use client";
 
-import { Table, Tag, Space, Modal, Select, Typography, Flex, Statistic, Checkbox, Button, Card, Progress, Input } from 'antd';
+import { Table, Tag, Space, Modal, Select, Typography, Flex, Statistic, Checkbox, Button, Card, Progress, Input, message } from 'antd';
 import { useState, useEffect, useRef } from 'react';
-import type { CountdownProps } from 'antd';
-import type { InputRef } from 'antd';
-import type { TableProps } from 'antd';
+import type { CountdownProps, InputRef, TableProps } from 'antd';
 import { useCookies             } from 'react-cookie';
 
 const columns: TableProps<DataType>['columns'] = [
@@ -42,21 +40,31 @@ let timer     = Date.now();
 
 export default (props) => {
   const [mounted     , setMounted]   = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
 
+  // If this checkbox is selected, it will not gather the value from inputbox. The user is able to complete the work by paper
+  // and score it afterward.
   const [skipCheckAnswer, setSkipCheckAnswer] = useState(false);
+
+  // The term is used as the selector
   const [term    , setTerm    ] = useState("");
   const [terms   , setTerms   ] = useState([]);
+
+  // The group is used as the second level selector
   const [group   , setGroup   ] = useState("");
   const [groups  , setGroups  ] = useState([]);
-  const [question, setQuestion] = useState({"question": "This is the initial question."});
+
+  // The question is set
+  const [question, setQuestion] = useState({"question": ""});
   const [answers , setAnswers ] = useState([]);
-  const [open, setOpen] = useState(false);
+  const [open    , setOpen    ] = useState(false);
 
   const [inputValue, setInputValue] = useState('');
+  const [enableInputBox, setEnableInputBox] = useState(true);
 
-  const [numQuesCor, setNumQuesCor] = useState(0);
-  const [numQues, setNumQues] = useState(1);
-  const [numQues2Do, setNumQues2Do] = useState(1);
+  const [numQuesCor, setNumQuesCor] = useState(0);    // The number of the successful questions 
+  const [numQues   , setNumQues]    = useState(1);    // The number of the question which has been completed.
+  const [numQues2Do, setNumQues2Do] = useState(1);    // The number of the question to be do.
 
   const inputRef = useRef<InputRef>(null);
   const [cookies, setCookie] = useCookies([]);
@@ -66,8 +74,8 @@ export default (props) => {
   const onInputKeyUp = (event) => {
     if(event.keyCode === 13){
       let inputV = inputValue;
-      console.log("-----------");
-      console.log(inputV);
+//      console.log("-----------");
+//      console.log(inputV);
       setInputValue("");
       setNumQues2Do(jsonQ.length);
 
@@ -77,11 +85,9 @@ export default (props) => {
       jsonDoneQ[jsonDoneQ.length-1]["time_taken"] = timeTaken;
 
       jsonDoneQ[jsonDoneQ.length-1]["response"] = inputV;
-      console.log(jsonDoneQ);
-      console.log(inputV.toLowerCase().trim());
-//      let jsonAnswers = JSON.parse(jsonDoneQ[jsonDoneQ.length-1].answers);
+//      console.log(jsonDoneQ);
+//      console.log(inputV.toLowerCase().trim());
 
-      // if (inputV.toLowerCase().trim() == jsonAnswers[0].toLowerCase().trim() ){
       if (inputV.toLowerCase().trim() == jsonDoneQ[jsonDoneQ.length-1].answer.toLowerCase().trim() ){
         setNumQuesCor(numQuesCor + 1);
       }
@@ -90,9 +96,9 @@ export default (props) => {
         // Once all the question are done, proceed the answers.
         SpeakEnglish("The test has been completed.");
         setOpen(true);
+        setEnableInputBox(true);  // Default: Input box is disabled
+        setQuestion({"question": ""});
 
-        event.target.disabled = true;
-        // fetch(`/example-backend/api/v1/fill-in-blank?` + new URLSearchParams(params), {method: "POST", body: JSON.stringify({user: cookies.user_email, data: jsonData})})
         fetch(`/example-backend/api/v1/fill-in-blank`, {method: "POST", body: JSON.stringify({user: cookies.user_email, data: jsonDoneQ})})
           .then(response => console.log(response.status) || response)
           .then(response => response.text())
@@ -157,7 +163,7 @@ export default (props) => {
 
   useEffect(() => { 
     setMounted(true);
-
+    setEnableInputBox(true);  // Default: Input box is disabled
     let params = _.cloneDeep(props);
     params["questionType"] = "fill-in-blank";
 
@@ -177,6 +183,8 @@ export default (props) => {
 
   const SkipAnswerProgress = () => {
     if (!skipCheckAnswer) {
+      // Complete ratio = number of correct questions / ( all the questions - number of question to do )
+      // Example: Total 10, completed: 8, successful: 6 -> 6/8
       return (<Progress type="circle" percent={100*numQuesCor/(numQues-numQues2Do)} format={(percent) => `成功率${numQuesCor}/${numQues-numQues2Do}`} />)
     } 
   }
@@ -184,14 +192,36 @@ export default (props) => {
   // https://github.com/BradBarkel/js-text-to-speech/blob/master/dist/js/main.js
   const TestProcess = () => {
     let params        = _.cloneDeep(props);
+    if (cookies.user_email === undefined) {
+      messageApi.open({
+        type: 'warning',
+        content: 'Please login from google.',
+      });
+      return;
+    }
     params["user"]    = cookies.user_email;
     params["level02"] = term;
+    if (term === "") {
+      messageApi.open({
+        type: 'warning',
+        content: 'Please select the term first.',
+      });
+      return;
+    }
     params["level03"] = group;
+    if (group === "") {
+      messageApi.open({
+        type: 'warning',
+        content: 'Please select the group first.',
+      });
+      return;
+    }
 
     fetch(`/example-backend/api/v1/fill-in-blank?` + new URLSearchParams(params).toString())
       .then(response => console.log(response.status) || response)
       .then(response => response.json())
       .then(body => {
+        jsonDoneQ = _.cloneDeep([]);
         jsonQ = body;
 
         if (body.length === 0) {
@@ -206,6 +236,7 @@ export default (props) => {
         theQ["key"] = theQ["sequence"];
         jsonDoneQ.push(theQ);
         setQuestion(theQ);
+        setEnableInputBox(false);  // Once the data is fetched, the inputbox is enabled.
         // SpeakEnglish(word.enword);
     });
   }
@@ -231,12 +262,13 @@ export default (props) => {
 
   return mounted && (
     <div>
+    {contextHolder}
     <Typography.Title level={5}>{ EikenLevelName(props.level) } - wrtie words from audio</Typography.Title>
     <Card hoverable style={cardStyle} styles={{ body: { padding: 20, overflow: 'hidden' } }}>
     <Flex vertical='vertical' justify='space-evenly' gap={ 50 } >
       <Flex justify='space-evenly' align='center' gap={ 80 }>
         <Flex vertical='vertical' justify='space-evenly'>
-          <Typography.Title level={5}>Group</Typography.Title>
+          <Typography.Title level={5}>Term</Typography.Title>
           <Select
             defaultValue={terms[0]}
             style={{ width: 120 }}
@@ -245,7 +277,7 @@ export default (props) => {
           />
         </Flex>
         <Flex vertical='vertical' justify='space-evenly'>
-          <Typography.Title level={5}>Section</Typography.Title>
+          <Typography.Title level={5}>Group</Typography.Title>
           <Select
             style={{ width: 120 }}
             value={group}
@@ -254,7 +286,7 @@ export default (props) => {
           />
         </Flex>
         <Flex vertical='vertical' justify='space-evenly' gap='large'>
-          <Button type="primary" onClick={ TestProcess }>Start Test</Button>
+          <Button type="primary" onClick={ TestProcess }>Next 10</Button>
           <Checkbox checked={skipCheckAnswer} onChange={ onSkipCheckAnswer}>{correctnessLabel}</Checkbox>
         </Flex>
       </Flex>
@@ -269,7 +301,7 @@ export default (props) => {
         }
       </Flex>
       <Flex justify='space-evenly' align='center'>
-        <Input {...inputProps} value={inputValue} onChange={ event => setInputValue(event.target.value) } />
+        <Input {...inputProps} value={inputValue} disabled={ enableInputBox }  onChange={ event => setInputValue(event.target.value) } />
       </Flex>
       <Flex justify='flex-end'>
         <Countdown title="Seconds" value={Date.now() + 60 * 1000} format="HH:mm:ss" onFinish={ () => {alert("Completed the count down")} } />
