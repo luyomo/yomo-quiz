@@ -38,6 +38,10 @@ let jsonQ     = [];
 let jsonDoneQ = [];
 let timer     = Date.now();
 
+const uid = function(){
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
 export default (props) => {
   const [mounted     , setMounted]   = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
@@ -190,7 +194,7 @@ export default (props) => {
   }
 
   // https://github.com/BradBarkel/js-text-to-speech/blob/master/dist/js/main.js
-  const TestProcess = () => {
+  const TestProcess = (reqType) => {
     let params        = _.cloneDeep(props);
     if (cookies.user_email === undefined) {
       messageApi.open({
@@ -217,6 +221,8 @@ export default (props) => {
       return;
     }
 
+    params["type"] = reqType;
+
     fetch(`/example-backend/api/v1/fill-in-blank?` + new URLSearchParams(params).toString())
       .then(response => console.log(response.status) || response)
       .then(response => response.json())
@@ -224,10 +230,13 @@ export default (props) => {
         jsonDoneQ = _.cloneDeep([]);
         jsonQ = body;
 
-        if (body.length === 0) {
+        console.log(body);
+        if (body === null || body.length === 0) {
           SpeakEnglish("No available words for the specific section.");
           return;
         }
+
+        setNumQuesCor(0);
         setNumQues(jsonQ.length);
         setNumQues2Do(jsonQ.length);
         inputRef.current!.focus({ cursor: 'start' });
@@ -286,7 +295,8 @@ export default (props) => {
           />
         </Flex>
         <Flex vertical='vertical' justify='space-evenly' gap='large'>
-          <Button type="primary" onClick={ TestProcess }>Next 10</Button>
+          <Button type="primary" onClick={() => { TestProcess("new") }} reqType="new">Next 10</Button>
+          <Button onClick={() => { TestProcess("failure") }}  reqType="failure">Next Failed 10</Button>
           <Checkbox checked={skipCheckAnswer} onChange={ onSkipCheckAnswer}>{correctnessLabel}</Checkbox>
         </Flex>
       </Flex>
@@ -296,7 +306,7 @@ export default (props) => {
       </Flex>
       <Flex vertical='vertical' justify='space-evenly' align='center'>
         { question.question.split("\\n").map(function(row, idx){
-            return (<Typography key="text-{idx}">{ row }</Typography> )
+            return (<Typography key={ uid() }>{ row }</Typography> )
           })
         }
       </Flex>

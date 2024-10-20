@@ -150,12 +150,22 @@ func main() {
 
   r.GET("/api/v1/fill-in-blank", func(c *gin.Context) {
     user := c.Query("user")
+    dataType := c.Query("type")
     level01 := c.Query("level01")
     level02 := c.Query("level02")
     level03 := c.Query("level03")
 
-    retData :=  fetchFillInBlankQA(&user, &level01, &level02, &level03)
-    c.String(http.StatusOK, string(retData))
+
+    switch dataType {
+      case "new":
+        retData := fetchFillInBlankQANew(&user, &level01, &level02, &level03)
+        c.String(http.StatusOK, string(retData))
+      case "failure":
+        retData := fetchFillInBlankQAFailure(&user, &level01, &level02, &level03)
+        c.String(http.StatusOK, string(retData))
+      default:
+        fmt.Printf("Unsupported type: %s \n", dataType)
+    }
   })
 
   r.POST("/api/v1/fill-in-blank", func(c *gin.Context) {
@@ -346,19 +356,19 @@ type PostSciencePictorialPlant struct {
 }
 
 func fetchSciencePictorialPlantNew(user *string) []byte {
-   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join science_choice_qa t3 on t2.question_id = t3.sequence where t2.question_id is null order by t3.sequence limit 5`, *user))
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join science_choice_qa t3 on t2.question_id = t3.sequence where t2.question_id is null order by t3.sequence limit 10`, *user))
 }
 
 func fetchSciencePictorialPlantFailure(user *string) []byte {
-   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join science_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id limit 5`, *user))
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from science_choice_qa_test t1 inner join science_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join science_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id limit 10`, *user))
 }
 
 func fetchHistoryChoiceNew(user, level01, level02, level03 *string) []byte {
-   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join general_choice_qa t3 on t2.question_id = t3.sequence inner join v_choice_qa_category t4 on t4.sequence = t3.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03 = '%s'  where t2.question_id is null order by t3.sequence limit 5`, *user, *level01, *level02, *level03))
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t3.* from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join general_choice_qa t3 on t2.question_id = t3.sequence inner join v_choice_qa_category t4 on t4.sequence = t3.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03 = '%s'  where t2.question_id is null order by t3.sequence limit 10`, *user, *level01, *level02, *level03))
 }
 
 func fetchHistoryChoiceFailure(user, level01, level02, level03 *string) []byte {
-   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join general_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id inner join v_choice_qa_category t4 on t4.sequence = t2.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03  = '%s' limit 5`, *user, *level01, *level02, *level03))
+   return fetchSciencePictorialPlant(fmt.Sprintf(`select t2.* from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from general_choice_qa_test t1 inner join general_choice_qa_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join general_choice_qa t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id inner join v_choice_qa_category t4 on t4.sequence = t2.category and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03  = '%s' limit 10`, *user, *level01, *level02, *level03))
 }
 
 func fetchSciencePictorialPlant(query string) []byte {
@@ -494,10 +504,9 @@ func postFillInBlankQA(reqData PostFillInBlankQA) error  {
 
   queryString = "insert into qa_fill_in_question_hist(test_id, sequence, question_id, answer, is_correct, time_taken) values (?, ?, ?, ?, ?, ?)"
 
-
   for idx, row := range reqData.FillInBlankQA {
     var isCorrect bool
-    if row.IsCorrect == 1 {
+    if row.Answer == row.Response {
       isCorrect = true
     }else {
       isCorrect = false
@@ -712,7 +721,18 @@ type PostFillInBlankQA struct {
     FillInBlankQA []FillInBlankQA `json:"data"`
 }
 
-func fetchFillInBlankQA(user, level01, level02, level03 *string) []byte {
+func fetchFillInBlankQANew(user, level01, level02, level03 *string) []byte {
+  query := fmt.Sprintf(`select t3.sequence, t3.question, t3.answer from qa_fill_in_question_test t1 inner join qa_fill_in_question_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join qa_fill_in_question t3 on t2.question_id = t3.sequence inner join question_category t4 on t4.sequence = t3.category and question_type = 'fill-in-blank' and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03 = '%s'  where t2.question_id is null order by t3.sequence limit 3`, *user, *level01, *level02, *level03)
+  return fetchFillInBlankQA(&query)
+}
+
+func fetchFillInBlankQAFailure(user, level01, level02, level03 *string) []byte {
+  query := fmt.Sprintf(`select t2.sequence, t2.question, t2.answer from (select rank() over (partition by t2.question_id order by t1.create_at desc) as rank , t2.question_id, t1.create_at, t2.is_correct from qa_fill_in_question_test t1 inner join qa_fill_in_question_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id ) t1 inner join qa_fill_in_question t2 on t1.rank = 1 and t1.is_correct = 0 and t2.sequence = t1.question_id inner join question_category t4 on t4.sequence = t2.category and t4.question_type = 'fill-in-blank' and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03  = '%s' limit 10`, *user, *level01, *level02, *level03)
+
+  return fetchFillInBlankQA(&query)
+}
+
+func fetchFillInBlankQA(query *string) []byte {
   db, err := sql.Open("mysql", "yomoenuser:yomoenuser@tcp(192.168.1.105:3306)/yomoen")
   if err != nil {
     panic(err)
@@ -724,8 +744,7 @@ func fetchFillInBlankQA(user, level01, level02, level03 *string) []byte {
 
   var fillInBlankQAs []FillInBlankQA
 
-  query := fmt.Sprintf(`select t3.sequence, t3.question, t3.answer from qa_fill_in_question_test t1 inner join qa_fill_in_question_hist t2 on t1.userAccount = '%s' and t1.id = t2.test_id right join qa_fill_in_question t3 on t2.question_id = t3.sequence inner join question_category t4 on t4.sequence = t3.category and question_type = 'fill-in-blank' and t4.level01 = '%s' and t4.level02 = '%s' and t4.level03 = '%s'  where t2.question_id is null order by t3.sequence limit 10`, *user, *level01, *level02, *level03)
-  rows , err := db.Query(query)
+  rows , err := db.Query(*query)
 
   checkErr(err)
   for rows.Next() {
